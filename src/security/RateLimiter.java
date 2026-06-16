@@ -26,16 +26,17 @@ public class RateLimiter {
 
     // بررسی می‌کند که آیا کاربر در این لحظه مجاز به ارسال پیام هست یا خیر
     // در صورت مجاز بودن، زمان فعلی ثبت می‌شود تا در دفعات بعد محاسبه شود
-    public synchronized boolean allowSend(String userId) {
+    public boolean allowSend(String userId) {
         long now = Instant.now().toEpochMilli();
 
         // دریافت یا ایجاد صف زمان‌های ارسال برای این کاربر
         Deque<Long> timestamps = userTimestamps.computeIfAbsent(userId, k -> new ArrayDeque<>());
 
         // حذف زمان‌های خارج از بازه فعلی پنجره لغزان
-        while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
-            timestamps.pollFirst();
-        }
+       synchronized (timestamps) {
+            while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
+                timestamps.pollFirst();
+            }
 
         if (timestamps.size() >= MAX_MESSAGES) {
             // تعداد پیام‌های مجاز در یک ثانیه پر شده است
@@ -45,10 +46,10 @@ public class RateLimiter {
         // ثبت این ارسال و اجازه ادامه کار
         timestamps.addLast(now);
         return true;
+      }
     }
-
     // تعداد پیام‌های ارسال‌شده توسط کاربر در بازه فعلی را برمی‌گرداند
-    public synchronized int currentCount(String userId) {
+    public int currentCount(String userId) {
         long now = Instant.now().toEpochMilli();
         Deque<Long> timestamps = userTimestamps.get(userId);
         if (timestamps == null)
