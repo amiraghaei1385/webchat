@@ -55,13 +55,14 @@ public class RateLimiter {
         if (timestamps == null)
             return 0;
 
-        // حذف رکوردهای قدیمی قبل از شمارش
+     // حذف رکوردهای قدیمی قبل از شمارش
+       synchronized (timestamps) {
         while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
             timestamps.pollFirst();
-        }
+            }
         return timestamps.size();
-    }
-
+        }
+    }   
     // اطلاعات ثبت‌شده برای کاربر را حذف می‌کند
     // معمولاً هنگام خروج کاربر از سیستم استفاده می‌شود
     public void clear(String userId) {
