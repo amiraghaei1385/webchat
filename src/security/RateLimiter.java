@@ -33,18 +33,32 @@ public class RateLimiter {
         Deque<Long> timestamps = userTimestamps.computeIfAbsent(userId, k -> new ArrayDeque<>());
 
         // حذف زمان‌های خارج از بازه فعلی پنجره لغزان
+<<<<<<< Updated upstream
         while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
             timestamps.pollFirst();
         }
+=======
+        synchronized (timestamps) {
+            while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
+                timestamps.pollFirst();
+            }
+>>>>>>> Stashed changes
 
-        if (timestamps.size() >= MAX_MESSAGES) {
-            // تعداد پیام‌های مجاز در یک ثانیه پر شده است
-            return false;
-        }
+            if (timestamps.size() >= MAX_MESSAGES) {
+                // تعداد پیام‌های مجاز در یک ثانیه پر شده است
+                return false;
+            }
 
+<<<<<<< Updated upstream
         // ثبت این ارسال و اجازه ادامه کار
         timestamps.addLast(now);
         return true;
+=======
+            // ثبت این ارسال و اجازه ادامه کار
+            timestamps.addLast(now);
+            return true;
+        }
+>>>>>>> Stashed changes
     }
 
     // تعداد پیام‌های ارسال‌شده توسط کاربر در بازه فعلی را برمی‌گرداند
@@ -54,13 +68,34 @@ public class RateLimiter {
         if (timestamps == null)
             return 0;
 
+<<<<<<< Updated upstream
         // حذف رکوردهای قدیمی قبل از شمارش
+=======
+<<<<<<< Updated upstream
+     // حذف رکوردهای قدیمی قبل از شمارش
+       synchronized (timestamps) {
+>>>>>>> Stashed changes
         while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
             timestamps.pollFirst();
         }
+<<<<<<< Updated upstream
         return timestamps.size();
     }
 
+=======
+    }   
+=======
+        // حذف رکوردهای قدیمی قبل از شمارش
+        synchronized (timestamps) {
+            while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
+                timestamps.pollFirst();
+            }
+            return timestamps.size();
+        }
+    }
+
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
     // اطلاعات ثبت‌شده برای کاربر را حذف می‌کند
     // معمولاً هنگام خروج کاربر از سیستم استفاده می‌شود
     public void clear(String userId) {
