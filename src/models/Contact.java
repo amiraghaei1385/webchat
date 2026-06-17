@@ -11,11 +11,8 @@ public class Contact {
     private String contactId; // the user who was added
     private String nickname; // optional custom name set by the owner
     private boolean isBlocked;
-    // true اگر کاربر واقعاً به مخاطبین اضافه شده باشد.
-    // false یعنی این رکورد صرفاً برای نگه‌داشتن وضعیت بلاک یک "غریبه" ساخته شده
-    // (کاربری که contact نیست ولی بلاک شده) و نباید در لیست مخاطبین نمایش داده شود.
-    private boolean isContact;
     private LocalDateTime addedAt;
+    private boolean isContact; // آیا واقعاً به مخاطبین اضافه شده یا فقط بلاک شده
 
     public Contact() {
     }
@@ -24,7 +21,7 @@ public class Contact {
         this.ownerId = ownerId;
         this.contactId = contactId;
         this.isBlocked = false;
-        this.isContact = true;
+        this.isContact = true; // پیش‌فرض: واقعاً مخاطب است
         this.addedAt = LocalDateTime.now();
     }
 
@@ -43,10 +40,6 @@ public class Contact {
 
     public boolean isBlocked() {
         return isBlocked;
-    }
-
-    public boolean isContact() {
-        return isContact;
     }
 
     public LocalDateTime getAddedAt() {
@@ -70,17 +63,20 @@ public class Contact {
         this.isBlocked = blocked;
     }
 
-    public void setContact(boolean contact) {
-        this.isContact = contact;
-    }
-
     public void setAddedAt(LocalDateTime t) {
         this.addedAt = t;
     }
 
+    public boolean isContact() {
+        return isContact;
+    }
+
+    public void setContact(boolean isContact) {
+        this.isContact = isContact;
+    }
+
     @Override
     public String toString() {
-        return "Contact{ownerId='" + ownerId + "', contactId='" + contactId
-                + "', isContact=" + isContact + ", isBlocked=" + isBlocked + "}";
+        return "Contact{ownerId='" + ownerId + "', contactId='" + contactId + "', isBlocked=" + isBlocked + "}";
     }
 }
