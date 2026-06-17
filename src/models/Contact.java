@@ -12,6 +12,7 @@ public class Contact {
     private String nickname; // optional custom name set by the owner
     private boolean isBlocked;
     private LocalDateTime addedAt;
+    private boolean isContact; // آیا واقعاً به مخاطبین اضافه شده یا فقط بلاک شده
 
     public Contact() {
     }
@@ -20,6 +21,7 @@ public class Contact {
         this.ownerId = ownerId;
         this.contactId = contactId;
         this.isBlocked = false;
+        this.isContact = true; // پیش‌فرض: واقعاً مخاطب است
         this.addedAt = LocalDateTime.now();
     }
 
@@ -63,6 +65,14 @@ public class Contact {
 
     public void setAddedAt(LocalDateTime t) {
         this.addedAt = t;
+    }
+
+    public boolean isContact() {
+        return isContact;
+    }
+
+    public void setContact(boolean isContact) {
+        this.isContact = isContact;
     }
 
     @Override
