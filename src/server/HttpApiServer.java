@@ -18,14 +18,15 @@ public class HttpApiServer {
     private final int port;
     private HttpServer server;
 
-    // نگه‌داری handler های ثبت‌شده: "METHOD /path" -> handler
+    // نگه‌داری handler های ثبت‌شده: "METHOD /prefix" -> handler
+    // هر handler خودش مسئول تشخیص دقیق زیرمسیرهاست
     private final Map<String, HttpHandler> routes = new HashMap<>();
 
     public HttpApiServer(int port) {
         this.port = port;
     }
 
-    // ثبت یک endpoint جدید
+    // ثبت یک endpoint جدید.
     public void register(String method, String path, HttpHandler handler) {
         routes.put(method.toUpperCase() + " " + path, handler);
     }
@@ -46,10 +47,10 @@ public class HttpApiServer {
                 return;
             }
 
-            String key = exchange.getRequestMethod().toUpperCase()
-                    + " " + exchange.getRequestURI().getPath();
+            String method = exchange.getRequestMethod().toUpperCase();
+            String requestPath = exchange.getRequestURI().getPath();
 
-            HttpHandler handler = routes.get(key);
+            HttpHandler handler = findHandler(method, requestPath);
             if (handler != null) {
                 handler.handle(exchange);
             } else {
@@ -61,6 +62,37 @@ public class HttpApiServer {
         server.setExecutor(Executors.newCachedThreadPool());
         server.start();
         System.out.println("HTTP server started on port " + port);
+    }
+
+    // یافتن handler مناسب برای یک درخواست.
+    // ابتدا exact match بررسی می‌شود (برای مسیرهای ثابت مثل /api/chats)
+    private HttpHandler findHandler(String method, String requestPath) {
+        String exactKey = method + " " + requestPath;
+        if (routes.containsKey(exactKey)) {
+            return routes.get(exactKey);
+        }
+
+        HttpHandler bestMatch = null;
+        int bestLength = -1;
+        for (Map.Entry<String, HttpHandler> entry : routes.entrySet()) {
+            String key = entry.getKey();
+            int spaceIdx = key.indexOf(' ');
+            String registeredMethod = key.substring(0, spaceIdx);
+            String registeredPath = key.substring(spaceIdx + 1);
+
+            if (!registeredMethod.equals(method))
+                continue;
+
+            // پیشوند باید با "/" مرز مسیر را رعایت کند تا مثلا
+            boolean matches = requestPath.equals(registeredPath)
+                    || requestPath.startsWith(registeredPath + "/");
+
+            if (matches && registeredPath.length() > bestLength) {
+                bestMatch = entry.getValue();
+                bestLength = registeredPath.length();
+            }
+        }
+        return bestMatch;
     }
 
     public void stop() {
