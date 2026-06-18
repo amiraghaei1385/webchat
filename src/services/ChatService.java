@@ -65,4 +65,20 @@ public class ChatService {
     public Optional<Chat> findById(String chatId) {
         return chatRepository.findById(chatId);
     }
+
+    // سنجاق یا آن‌پین کردن یک چت در صفحه اصلی.
+    public void setPinned(String chatId, boolean pinned) {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new IllegalArgumentException("Chat not found."));
+        chat.setPinned(pinned);
+        chatRepository.update(chat);
+    }
+
+    // افزودن یا حذف یک چت از آرشیو.
+    public void setArchived(String chatId, boolean archived) {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new IllegalArgumentException("Chat not found."));
+        chat.setArchived(archived);
+        chatRepository.update(chat);
+    }
 }
