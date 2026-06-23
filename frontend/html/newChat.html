@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت جدید - Web Chat</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .newchat-container {
+            min-height: 100vh;
+            background: var(--bg-light);
+            padding: 2rem 1rem;
+        }
+
+        .newchat-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .newchat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3rem;
+            gap: 1.5rem;
+        }
+
+        .newchat-header-back {
+            cursor: pointer;
+            font-size: 2em;
+            color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .newchat-header-back:hover {
+            transform: scale(1.1);
+        }
+
+        .newchat-header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+
+        .form-section {
+            background: var(--bg-white);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-section h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0;
+        }
+
+        .form-group input {
+            flex: 1;
+        }
+
+        .form-group button {
+            flex-shrink: 0;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .form-group button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .form-group button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 3rem 0;
+        }
+
+        .contacts-section {
+            background: var(--bg-white);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .contacts-section-title {
+            padding: 1rem;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .contacts-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-item:hover {
+            background: var(--bg-light);
+        }
+
+        .contact-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 1rem;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .contact-id {
+            font-size: 0.85em;
+            color: var(--text-gray);
+        }
+
+        .empty-contacts {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-gray);
+        }
+
+        .loading {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 3px solid var(--bg-light);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .search-input {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-white);
+        }
+
+        .search-input input {
+            width: 100%;
+            margin-bottom: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .search-input input:focus {
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .newchat-container {
+                padding: 1rem;
+            }
+
+            .form-section {
+                padding: 1.5rem;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .form-group button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="newchat-container">
+        <div class="newchat-wrapper">
+            <!-- Header -->
+            <div class="newchat-header">
+                <span class="newchat-header-back" onclick="goBack()">←</span>
+                <h1>چت جدید</h1>
+            </div>
+
+            <!-- Create Group Section -->
+            <div class="form-section">
+                <h3>📌 ایجاد گروه</h3>
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="group-name" 
+                        placeholder="نام گروه را وارد کنید..."
+                    >
+                    <button onclick="createNewGroup()" id="create-group-btn">ایجاد</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Start Chat Section -->
+            <div class="form-section">
+                <h3>💬 شروع چت</h3>
+                <p style="color: var(--text-gray); font-size: 0.9em; margin-top: 0;">
+                    از لیست زیر یک مخاطب را انتخاب کنید یا آیدی کاربر جدید را وارد کنید
+                </p>
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="user-id" 
+                        placeholder="آیدی کاربر یا نام را وارد کنید..."
+                        onkeyup="handleContactSearch()"
+                    >
+                    <button onclick="startNewChat()" id="start-chat-btn">شروع</button>
+                </div>
+            </div>
+
+            <!-- Contacts List -->
+            <div class="contacts-section">
+                <div class="contacts-section-title">مخاطبین</div>
+                <div class="search-input">
+                    <input 
+                        type="text" 
+                        placeholder="جستجو در مخاطبین..."
+                        onkeyup="handleContactSearch()"
+                    >
+                </div>
+                <div class="contacts-list" id="contacts-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/pages/newChat.js"></script>
+</body>
+</html>
