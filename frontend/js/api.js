@@ -25,13 +25,12 @@ function getHeaders(includeAuth = true) {
     const headers = {
         'Content-Type': 'application/json'
     };
-    
     if (includeAuth) {
-        const token = getAuthToken();
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
+    const token = getAuthToken();
+    if (token) {
+        headers['Authorization'] = token; 
     }
+}
     
     return headers;
 }
@@ -60,8 +59,8 @@ async function makeRequest(endpoint, method = 'GET', body = null, includeAuth = 
         // ✅ بهتر کردن مدیریت خطای 401
         if (response.status === 401) {
             console.warn('Unauthorized - clearing session and redirecting to login');
-            StorageManager.clear();
-            window.location.href = '/html/login.html';
+           // StorageManager.clear();
+           // window.location.href = '/html/login.html';
             return null;
         }
         
