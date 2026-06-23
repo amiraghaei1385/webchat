@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت - Web Chat</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg-white);
+        }
+
+        .chat-header {
+            padding: 1rem;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chat-header-back {
+            cursor: pointer;
+            font-size: 1.5em;
+            color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .chat-header-back:hover {
+            transform: scale(1.2);
+        }
+
+        .chat-header-info {
+            flex: 1;
+        }
+
+        .chat-header-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: var(--text-dark);
+        }
+
+        .chat-header-status {
+            font-size: 0.85em;
+            color: var(--text-gray);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 0.5rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 60%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            background: var(--bg-light);
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .message.sent .message-bubble {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .message.received .message-bubble {
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .message-time {
+            font-size: 0.7em;
+            color: var(--text-gray);
+            margin-top: 0.25rem;
+            text-align: center;
+            margin-left: 0.5rem;
+        }
+
+        .message.sent .message-time {
+            text-align: right;
+            margin-left: auto;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-area {
+            background: var(--bg-white);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            font-size: 0.95rem;
+            margin-bottom: 0;
+            background: var(--bg-light);
+        }
+
+        .input-area input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-area button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 2rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .input-area button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-gray);
+            text-align: center;
+        }
+
+        .loading-messages {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .spinner {
+            border: 4px solid var(--bg-light);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .message-bubble {
+                max-width: 85%;
+            }
+
+            .chat-header {
+                padding: 0.75rem;
+            }
+
+            .messages-container {
+                padding: 0.75rem;
+            }
+
+            .input-area {
+                padding: 0.75rem;
+            }
+
+            .input-area button {
+                padding: 0.75rem 1rem;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="chat-header-back" onclick="goBack()">←</div>
+            <div class="chat-header-info">
+                <div class="chat-header-name" id="chat-name">Loading...</div>
+                <div class="chat-header-status" id="chat-status">آنلاین</div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="messages-container" id="messages-container">
+            <div class="loading-messages">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <input 
+                type="text" 
+                id="message-input" 
+                placeholder="پیام خود را بنویسید..."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button id="send-btn" onclick="sendNewMessage()">ارسال</button>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/pages/chat.js"></script>
+</body>
+</html>
