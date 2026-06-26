@@ -37,12 +37,9 @@ public class HttpApiServer {
 
         // تمام درخواست‌ها به یک handler مرکزی می‌روند
         server.createContext("/", exchange -> {
-            // افزودن هدرهای CORS
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Authorization, Content-Type");
-
+            // OPTIONS request برای CORS preflight
             if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                addCorsHeaders(exchange);
                 exchange.sendResponseHeaders(204, -1);
                 return;
             }
@@ -100,9 +97,20 @@ public class HttpApiServer {
             server.stop(0);
     }
 
-    // ارسال پاسخ JSON
+    // ✅ Helper method برای اضافه کردن CORS headers
+    private static void addCorsHeaders(HttpExchange exchange) {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    }
+
+    // ✅ FIXED: ارسال پاسخ JSON با CORS headers
     public static void sendResponse(HttpExchange exchange, int statusCode, String jsonBody) throws IOException {
         byte[] bytes = jsonBody.getBytes(StandardCharsets.UTF_8);
+
+        // ✅ اضافه کردن CORS headers قبل از sendResponseHeaders
+        addCorsHeaders(exchange);
+
         exchange.getResponseHeaders().add("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(statusCode, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
