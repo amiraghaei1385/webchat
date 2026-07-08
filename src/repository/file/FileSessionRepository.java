@@ -7,12 +7,13 @@ import utils.JsonUtil;
 import utils.PathUtil;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 // ذخیره‌سازی فایل‌محور نشست‌ها؛ هر نشست یک فایل storage/sessions/{token}.txt دارد
 public class FileSessionRepository implements SessionRepository {
 
-    private final Map<String, Session> store = new HashMap<>();
+    private final Map<String, Session> store = new ConcurrentHashMap<>();
 
     public FileSessionRepository() {
         loadAll();

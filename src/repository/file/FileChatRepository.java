@@ -8,12 +8,13 @@ import utils.PathUtil;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 // ذخیره‌سازی فایل‌محور چت‌ها؛ هر چت یک فایل storage/chats/{id}.txt دارد
 public class FileChatRepository implements ChatRepository {
 
-    private final Map<String, Chat> store = new HashMap<>();
+    private final Map<String, Chat> store = new ConcurrentHashMap<>();
 
     public FileChatRepository() {
         loadAll();
