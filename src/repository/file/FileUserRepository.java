@@ -7,12 +7,13 @@ import utils.JsonUtil;
 import utils.PathUtil;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 // ذخیره‌سازی فایل‌محور کاربران؛ هر کاربر یک فایل storage/users/{id}.txt دارد
 public class FileUserRepository implements UserRepository {
 
     // کش در حافظه برای دسترسی سریع؛ منبع حقیقت اصلی همان فایل‌های روی دیسک است
-    private final Map<String, User> store = new HashMap<>();
+    private final Map<String, User> store = new ConcurrentHashMap<>();
 
     public FileUserRepository() {
         loadAll();

@@ -7,12 +7,13 @@ import utils.JsonUtil;
 import utils.PathUtil;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 // ذخیره‌سازی فایل‌محور مخاطبین؛ هر رکورد یک فایل storage/contacts/{ownerId}__{contactId}.txt دارد
 public class FileContactRepository implements ContactRepository {
 
-    private final Map<String, Contact> store = new HashMap<>();
+    private final Map<String, Contact> store = new ConcurrentHashMap<>();
 
     public FileContactRepository() {
         loadAll();
