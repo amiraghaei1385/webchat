@@ -20,13 +20,15 @@ public class Main {
         FileSessionRepository sessionRepo = new FileSessionRepository();
         FileReportedMessageRepository reportRepo = new FileReportedMessageRepository();
         FileSettingsRepository settingsRepo = new FileSettingsRepository();
+        FileHistoryRepository historyRepo = new FileHistoryRepository();
 
         // ۲. ساخت service ها — فقط یک بار
         RateLimiter rateLimiter = new RateLimiter();
         ChatService chatService = new ChatService(chatRepo);
         AuthService authService = new AuthService(userRepo, sessionRepo, chatService);
         UserService userService = new UserService(userRepo);
-        MessageService messageService = new MessageService(messageRepo, chatRepo, reportRepo, rateLimiter);
+        HistoryService historyService = new HistoryService(historyRepo, chatRepo, messageRepo);
+        MessageService messageService = new MessageService(messageRepo, chatRepo, reportRepo, rateLimiter, historyService);
         GroupService groupService = new GroupService(groupRepo, chatRepo, userRepo);
         ContactService contactService = new ContactService(contactRepo, userRepo);
         AdminService adminService = new AdminService(userRepo, groupRepo, reportRepo, groupService);
