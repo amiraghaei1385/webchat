@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Chat - صفحه شروع</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .splash-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            flex-direction: column;
+        }
+        .splash-content {
+            text-align: center;
+            color: white;
+        }
+        .splash-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .splash-content p {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-screen">
+        <div class="splash-content">
+            <h1>💬 Web Chat</h1>
+            <p>در حال بارگذاری...</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        // اگر کاربر لاگین شده باشد، به صفحه اصلی برود
+        if (StorageManager.isLoggedIn()) {
+            window.location.href = 'html/home.html';
+        } else {
+            // وگرنه به لاگین برود
+            window.location.href = 'html/login.html';
+        }
+    </script>
+</body>
+</html>
