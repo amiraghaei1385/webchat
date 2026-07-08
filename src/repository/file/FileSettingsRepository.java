@@ -7,11 +7,12 @@ import utils.JsonUtil;
 import utils.PathUtil;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 // ذخیره‌سازی فایل‌محور تنظیمات کاربران؛ هر کاربر یک فایل storage/settings/{userId}.txt دارد
 public class FileSettingsRepository implements SettingsRepository {
 
-    private final Map<String, UserSettings> store = new HashMap<>();
+    private final Map<String, UserSettings> store = new ConcurrentHashMap<>();
 
     public FileSettingsRepository() {
         loadAll();

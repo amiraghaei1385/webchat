@@ -8,6 +8,7 @@ import utils.JsonUtil;
 import utils.PathUtil;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 // ذخیره‌سازی فایل‌محور گروه‌ها و اعضای آن‌ها
@@ -15,8 +16,8 @@ import java.util.stream.Collectors;
 // اعضا:    storage/groups/{groupId}/members/{userId}.txt
 public class FileGroupRepository implements GroupRepository {
 
-    private final Map<String, Group> groups = new HashMap<>();
-    private final Map<String, GroupMember> members = new HashMap<>();
+    private final Map<String, Group> groups = new ConcurrentHashMap<>();
+    private final Map<String, GroupMember> members = new ConcurrentHashMap<>();
 
     public FileGroupRepository() {
         loadGroups();
