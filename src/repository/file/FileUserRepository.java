@@ -1,72 +1,179 @@
 package repository.file;
 
+import java.time.LocalDate;
 import models.User;
 import repository.UserRepository;
-import utils.FileUtil;
-import utils.JsonUtil;
-import utils.PathUtil;
-import java.nio.file.Path;
+import java.io.*;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-// ذخیره‌سازی فایل‌محور کاربران؛ هر کاربر یک فایل storage/users/{id}.txt دارد
 public class FileUserRepository implements UserRepository {
-
-    // کش در حافظه برای دسترسی سریع؛ منبع حقیقت اصلی همان فایل‌های روی دیسک است
-    private final Map<String, User> store = new ConcurrentHashMap<>();
+    private final Map<String, User> users = new ConcurrentHashMap<>();
+    private final File fold = new File("storage/users");
 
     public FileUserRepository() {
+        if (!fold.exists()) {
+            fold.mkdirs();
+        }
         loadAll();
     }
 
-    // بارگذاری تمام کاربران موجود از دیسک هنگام راه‌اندازی سرور
+    // خواندن همه
     private void loadAll() {
-        List<String> contents = FileUtil.readAllInDirectory(PathUtil.usersDir());
-        for (String json : contents) {
-            User user = JsonUtil.fromJson(json, User.class);
-            if (user != null && user.getId() != null) {
-                store.put(user.getId(), user);
+        File[] files = fold.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        for (File file : files) {
+            User user = readUserFromFile(file);
+            if (user != null) {
+                users.put(user.getId(), user);
             }
         }
     }
 
-    private void persist(User user) {
-        Path path = PathUtil.userFile(user.getId());
-        FileUtil.writeAtomic(path, JsonUtil.toJson(user));
+    // خواندن یکی
+    private User readUserFromFile(File file) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String id = reader.readLine();
+            String username = reader.readLine();
+            String passhash = reader.readLine();
+            String profpath = reader.readLine();
+            String bio = reader.readLine();
+            String createdatline = reader.readLine();
+            String lastseenatline = reader.readLine();
+            String onlineline = reader.readLine();
+            String deleteline = reader.readLine();
+            String emailline = reader.readLine();
+            String birthdateline = reader.readLine();
+            reader.close();
+            User user = new User();
+            user.setId(fixEmpty(id));
+            user.setUsername(fixEmpty(username));
+            user.setPasswordHash(fixEmpty(passhash));
+            user.setProfilePicPath(fixEmpty(profpath));
+            user.setBio(fixEmpty(bio));
+            if (createdatline != null && !createdatline.equals("null")) {
+                user.setCreatedAt(LocalDateTime.parse(createdatline));
+            }
+            if (lastseenatline != null && !lastseenatline.equals("null")) {
+                user.setLastSeenAt(LocalDateTime.parse(lastseenatline));
+            }
+            user.setOnline(Boolean.parseBoolean(onlineline));
+            user.setDeleted(Boolean.parseBoolean(deleteline));
+            user.setEmail(fixEmpty(emailline));
+            if (birthdateline != null && !birthdateline.equals("null")) {
+                user.setBirthDate(LocalDate.parse(birthdateline));
+            }
+            return user;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // جلوگیری از مقدار خالی
+    private String fixEmpty(String value) {
+        if (value == null || value.equals("null")) {
+            return null;
+        }
+        return value;
+    }
+
+    // نوشتن
+    private void saveFile(User user) {
+        File file = new File(fold, user.getId() + ".txt");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(safe(user.getId()));
+            writer.newLine();
+            writer.write(safe(user.getUsername()));
+            writer.newLine();
+            writer.write(safe(user.getPasswordHash()));
+            writer.newLine();
+            writer.write(safe(user.getProfilePicPath()));
+            writer.newLine();
+            writer.write(safe(user.getBio()));
+            writer.newLine();
+            if (user.getCreatedAt() == null) {
+                writer.write(safe(null));
+            } else {
+                writer.write(safe(user.getCreatedAt().toString()));
+            }
+            writer.newLine();
+            if (user.getLastSeenAt() == null) {
+                writer.write(safe(null));
+            } else {
+                writer.write(safe(user.getLastSeenAt().toString()));
+            }
+            writer.newLine();
+            writer.write(String.valueOf(user.isOnline()));
+            writer.newLine();
+            writer.write(String.valueOf(user.isDeleted()));
+            writer.newLine();
+            writer.write(safe(user.getEmail()));
+            writer.newLine();
+            if (user.getBirthDate() == null) {
+                writer.write(safe(null));
+            } else {
+                writer.write(safe(user.getBirthDate().toString()));
+            }
+            writer.newLine();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // مقدار خالی برای نوشتن
+    private String safe(String value) {
+        if (value == null) {
+            return "null";
+        }
+        return value;
     }
 
     @Override
     public void save(User user) {
-        store.put(user.getId(), user);
-        persist(user);
-    }
-
-    @Override
-    public Optional<User> findById(String id) {
-        return Optional.ofNullable(store.get(id));
+        users.put(user.getId(), user);
+        saveFile(user);
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return store.values().stream()
-                .filter(u -> u.getUsername().equals(username))
-                .findFirst();
+        for (User user : users.values()) {
+            if (user.getUsername().equals(username)) {
+                return Optional.of(user);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
-    public List<User> findAll() {
-        return new ArrayList<>(store.values());
+    public Optional<User> findById(String id) {
+        return Optional.ofNullable(users.get(id));
     }
 
     @Override
     public void update(User user) {
-        store.put(user.getId(), user);
-        persist(user);
+        users.put(user.getId(), user);
+        saveFile(user);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return new ArrayList<>(users.values());
     }
 
     @Override
     public void delete(String id) {
-        store.remove(id);
-        FileUtil.delete(PathUtil.userFile(id));
+        users.remove(id);
+        File file = new File(fold, id + ".txt");
+        if (file.exists()) {
+            file.delete();
+        }
     }
 }

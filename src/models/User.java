@@ -1,31 +1,37 @@
 package models;
 
 import java.time.LocalDateTime;
-// Represents a registered user in the system.
+import java.time.LocalDate;
+
+// مدل کاربر
 public class User {
 
-    private String id; // unique ID
-    private String username; // display name
-    private String passwordHash; // bcrypt algo
-    private String profilePicPath; // path profile
+    private String id;
+    private String username;
+    private String passhash;
+    private String profilepicpath;
     private String bio;
-    private LocalDateTime createdAt;
-    private LocalDateTime lastSeenAt;
-    private boolean isOnline;
-    private boolean isDeleted;
+    private LocalDateTime createat;
+    private LocalDateTime lastseenat;
+    private boolean isonline;
+    private boolean isdeleted;
+    private String backgroundpicpath;
+    private String email;
+    private LocalDate birthdate;
 
     public User() {
     }
 
-    public User(String id, String username, String passwordHash) {
+    public User(String id, String username, String passwordhash) {
         this.id = id;
         this.username = username;
-        this.passwordHash = passwordHash;
-        this.createdAt = LocalDateTime.now();
-        this.lastSeenAt = LocalDateTime.now();
-        this.isOnline = false;
-        this.isDeleted = false;
+        this.passhash = passwordhash;
+        this.createat = LocalDateTime.now();
+        this.lastseenat = LocalDateTime.now();
+        this.isonline = false;
+        this.isdeleted = false;
     }
+
     // Getters
     public String getId() {
         return id;
@@ -36,11 +42,11 @@ public class User {
     }
 
     public String getPasswordHash() {
-        return passwordHash;
+        return passhash;
     }
 
     public String getProfilePicPath() {
-        return profilePicPath;
+        return profilepicpath;
     }
 
     public String getBio() {
@@ -48,19 +54,31 @@ public class User {
     }
 
     public LocalDateTime getCreatedAt() {
-        return createdAt;
+        return createat;
     }
 
     public LocalDateTime getLastSeenAt() {
-        return lastSeenAt;
+        return lastseenat;
     }
 
     public boolean isOnline() {
-        return isOnline;
+        return isonline;
     }
 
     public boolean isDeleted() {
-        return isDeleted;
+        return isdeleted;
+    }
+
+    public String getBackgroundPicPath() {
+        return backgroundpicpath;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthdate;
     }
 
     // Setters
@@ -72,12 +90,12 @@ public class User {
         this.username = username;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPasswordHash(String passwordhash) {
+        this.passhash = passwordhash;
     }
 
     public void setProfilePicPath(String path) {
-        this.profilePicPath = path;
+        this.profilepicpath = path;
     }
 
     public void setBio(String bio) {
@@ -85,23 +103,35 @@ public class User {
     }
 
     public void setCreatedAt(LocalDateTime t) {
-        this.createdAt = t;
+        this.createat = t;
     }
 
     public void setLastSeenAt(LocalDateTime t) {
-        this.lastSeenAt = t;
+        this.lastseenat = t;
     }
 
     public void setOnline(boolean online) {
-        this.isOnline = online;
+        this.isonline = online;
     }
 
     public void setDeleted(boolean deleted) {
-        this.isDeleted = deleted;
+        this.isdeleted = deleted;
+    }
+
+    public void setBackgroundPicPath(String backgroundpicpath) {
+        this.backgroundpicpath = backgroundpicpath;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setBirthDate(LocalDate birthdate) {
+        this.birthdate = birthdate;
     }
 
     @Override
     public String toString() {
-        return "User{id='" + id + "', username='" + username + "', isOnline=" + isOnline + "}";
+        return "User{id='" + id + "', username='" + username + "', isOnline=" + isonline + "}";
     }
 }

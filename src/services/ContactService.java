@@ -3,111 +3,114 @@ package services;
 import models.Contact;
 import repository.ContactRepository;
 import repository.UserRepository;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
-// مدیریت مخاطبین و بلاک کاربران.
+// مدیریت مخاطبین و بلاک کاربران
 public class ContactService {
 
-    private final ContactRepository contactRepository;
-    private final UserRepository userRepository;
+    private final ContactRepository contactrepo;
+    private final UserRepository userrepo;
 
     public ContactService(ContactRepository contactRepository, UserRepository userRepository) {
-        this.contactRepository = contactRepository;
-        this.userRepository = userRepository;
+        this.contactrepo = contactRepository;
+        this.userrepo = userRepository;
     }
 
-    // افزودن مخاطب
+    // ا مخاطب اضافه میشه
     public Contact addContact(String ownerId, String contactId) {
         if (ownerId.equals(contactId)) {
             throw new IllegalArgumentException("You cannot add yourself as a contact.");
         }
-        if (userRepository.findById(contactId).isEmpty()) {
+        if (userrepo.findById(contactId).isEmpty()) {
             throw new IllegalArgumentException("User not found.");
         }
-
-        Optional<Contact> existing = contactRepository.findByOwnerAndContact(ownerId, contactId);
-
-        // اگر قبلاً بلاک شده بود، فقط isContact را true کن
+        Optional<Contact> existing = contactrepo.findByOwnerAndContact(ownerId, contactId);
         if (existing.isPresent()) {
             Contact contact = existing.get();
             if (contact.isContact()) {
                 throw new IllegalArgumentException("Contact already exists.");
             }
             contact.setContact(true);
-            contactRepository.update(contact);
+            contactrepo.update(contact);
             return contact;
         }
-
         Contact contact = new Contact(ownerId, contactId);
-        contactRepository.save(contact);
+        contactrepo.save(contact);
         return contact;
     }
 
-    // دریافت لیست مخاطبین واقعی (بدون غریبه‌های بلاک‌شده)
-    public List<Contact> getContacts(String ownerId) {
-        return contactRepository.findByOwnerId(ownerId).stream()
-                .filter(Contact::isContact)
-                .collect(Collectors.toList());
-    }
-
-    public Optional<Contact> findContact(String ownerId, String contactId) {
-        return contactRepository.findByOwnerAndContact(ownerId, contactId);
-    }
-
-    // بلاک کردن کاربر
+    // کابر بلاک میشه
     public void blockUser(String ownerId, String targetId) {
+        if (userrepo.findById(targetId).isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
         if (ownerId.equals(targetId)) {
             throw new IllegalArgumentException("You cannot block yourself.");
         }
-        if (userRepository.findById(targetId).isEmpty()) {
-            throw new IllegalArgumentException("User not found.");
+        Optional<Contact> existing = contactrepo.findByOwnerAndContact(ownerId, targetId);
+        Contact contact;
+        if (existing.isPresent()) {
+            contact = existing.get();
+        } else {
+            contact = new Contact(ownerId, targetId);
+            contact.setContact(false);
+            contactrepo.save(contact);
         }
-
-        Contact contact = contactRepository.findByOwnerAndContact(ownerId, targetId)
-                .orElseGet(() -> {
-                    // غریبه است؛ isContact=false تا در لیست مخاطبین نیاید
-                    Contact newContact = new Contact(ownerId, targetId);
-                    newContact.setContact(false);
-                    contactRepository.save(newContact);
-                    return newContact;
-                });
-
         contact.setBlocked(true);
-        contactRepository.update(contact);
+        contactrepo.update(contact);
     }
 
-    // آنبلاک کردن کاربر
-    public void unblockUser(String ownerId, String targetId) {
-        contactRepository.findByOwnerAndContact(ownerId, targetId).ifPresent(contact -> {
-            contact.setBlocked(false);
-            // اگر غریبه بود، ردیف رو کلاً پاک کن
-            if (!contact.isContact()) {
-                contactRepository.delete(ownerId, targetId);
-            } else {
-                contactRepository.update(contact);
+    // دریافت لیست مخاطبین واقعی
+    public List<Contact> getContacts(String ownerId) {
+        List<Contact> all = contactrepo.findByOwnerId(ownerId);
+        List<Contact> result = new ArrayList<>();
+        for (Contact c : all) {
+            if (c.isContact()) {
+                result.add(c);
             }
-        });
+        }
+        return result;
     }
 
-    public boolean isBlocked(String ownerId, String targetId) {
-        return contactRepository.findByOwnerAndContact(ownerId, targetId)
-                .map(Contact::isBlocked)
-                .orElse(false);
+    public Optional<Contact> findContact(String ownerId, String contactId) {
+        return contactrepo.findByOwnerAndContact(ownerId, contactId);
     }
 
     // حذف مخاطب
     public void removeContact(String ownerId, String contactId) {
-        Contact contact = contactRepository.findByOwnerAndContact(ownerId, contactId)
-                .orElseThrow(() -> new IllegalArgumentException("Contact not found."));
-
-        if (contact.isBlocked()) {
-            // بلاک را نگه دار، فقط از مخاطبین حذف کن
-            contact.setContact(false);
-            contactRepository.update(contact);
-        } else {
-            contactRepository.delete(ownerId, contactId);
+        Optional<Contact> found = contactrepo.findByOwnerAndContact(ownerId, contactId);
+        if (found.isEmpty()) {
+            throw new IllegalArgumentException("Contact not found.");
         }
+        Contact contact = found.get();
+        if (contact.isBlocked()) {
+            contact.setContact(false);
+            contactrepo.update(contact);
+        } else {
+            contactrepo.delete(ownerId, contactId);
+        }
+    }
+
+    // کاربر انبلاک میشه
+    public void unblockUser(String ownerId, String targetId) {
+        Optional<Contact> found = contactrepo.findByOwnerAndContact(ownerId, targetId);
+        if (found.isEmpty()) {
+            return;
+        }
+        Contact contact = found.get();
+        contact.setBlocked(false);
+        if (!contact.isContact()) {
+            contactrepo.delete(ownerId, targetId);
+        } else {
+            contactrepo.update(contact);
+        }
+    }
+
+    public boolean isBlocked(String ownerId, String targetId) {
+        Optional<Contact> found = contactrepo.findByOwnerAndContact(ownerId, targetId);
+        if (found.isEmpty()) {
+            return false;
+        }
+        return found.get().isBlocked();
     }
 }

@@ -2,28 +2,26 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Represents a group chat's metadata (name, picture, owner, etc.).
-// Member list is managed via GroupMember objects.
-
+// مدل گروپ
 public class Group {
 
-    private String id; // unique ID
-    private String chatId; // linked Chat object ID
+    private String id;
+    private String idchat;
     private String name;
     private String description;
-    private String picturePath; // path group avatar
-    private String ownerId; // user who created the group
-    private LocalDateTime createdAt;
+    private String picturepath;
+    private String idowner;
+    private LocalDateTime createat;
 
     public Group() {
     }
 
-    public Group(String id, String chatId, String name, String ownerId) {
+    public Group(String id, String idchat, String name, String idowner) {
         this.id = id;
-        this.chatId = chatId;
+        this.idchat = idchat;
         this.name = name;
-        this.ownerId = ownerId;
-        this.createdAt = LocalDateTime.now();
+        this.idowner = idowner;
+        this.createat = LocalDateTime.now();
     }
 
     // Getters
@@ -32,7 +30,7 @@ public class Group {
     }
 
     public String getChatId() {
-        return chatId;
+        return idchat;
     }
 
     public String getName() {
@@ -44,15 +42,15 @@ public class Group {
     }
 
     public String getPicturePath() {
-        return picturePath;
+        return picturepath;
     }
 
     public String getOwnerId() {
-        return ownerId;
+        return idowner;
     }
 
     public LocalDateTime getCreatedAt() {
-        return createdAt;
+        return createat;
     }
 
     // Setters
@@ -60,8 +58,8 @@ public class Group {
         this.id = id;
     }
 
-    public void setChatId(String chatId) {
-        this.chatId = chatId;
+    public void setChatId(String idchat) {
+        this.idchat = idchat;
     }
 
     public void setName(String name) {
@@ -73,19 +71,19 @@ public class Group {
     }
 
     public void setPicturePath(String path) {
-        this.picturePath = path;
+        this.picturepath = path;
     }
 
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+    public void setOwnerId(String idowner) {
+        this.idowner = idowner;
     }
 
     public void setCreatedAt(LocalDateTime t) {
-        this.createdAt = t;
+        this.createat = t;
     }
 
     @Override
     public String toString() {
-        return "Group{id='" + id + "', name='" + name + "', ownerId='" + ownerId + "'}";
+        return "Group{id='" + id + "', name='" + name + "', ownerId='" + idowner + "'}";
     }
 }

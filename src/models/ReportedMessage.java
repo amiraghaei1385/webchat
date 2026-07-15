@@ -2,44 +2,70 @@ package models;
 
 import java.time.LocalDateTime;
 
-/**
- * Represents a message that has been reported by a user.
- * Reported messages are visible to the admin via CLI.
- */
+// مدل ریپورت
 public class ReportedMessage {
 
     private String id;
-    private String messageId;    // the reported message
-    private String reporterId;   // user who submitted the report
-    private String reason;       // optional reason text
-    private LocalDateTime reportedAt;
+    private String idmessage;
+    private String idreporter;
+    private String reason;
+    private LocalDateTime reportedat;
 
-    public ReportedMessage() {}
+    public ReportedMessage() {
+    }
 
-    public ReportedMessage(String id, String messageId, String reporterId, String reason) {
+    public ReportedMessage(String id, String idmessage, String idreporter, String reason) {
         this.id = id;
-        this.messageId = messageId;
-        this.reporterId = reporterId;
+        this.idmessage = idmessage;
+        this.idreporter = idreporter;
         this.reason = reason;
-        this.reportedAt = LocalDateTime.now();
+        this.reportedat = LocalDateTime.now();
     }
 
     // Getters
-    public String getId()                   { return id; }
-    public String getMessageId()            { return messageId; }
-    public String getReporterId()           { return reporterId; }
-    public String getReason()               { return reason; }
-    public LocalDateTime getReportedAt()    { return reportedAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getMessageId() {
+        return idmessage;
+    }
+
+    public String getReporterId() {
+        return idreporter;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public LocalDateTime getReportedAt() {
+        return reportedat;
+    }
 
     // Setters
-    public void setId(String id)                    { this.id = id; }
-    public void setMessageId(String messageId)      { this.messageId = messageId; }
-    public void setReporterId(String reporterId)    { this.reporterId = reporterId; }
-    public void setReason(String reason)            { this.reason = reason; }
-    public void setReportedAt(LocalDateTime t)      { this.reportedAt = t; }
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setMessageId(String idmessage) {
+        this.idmessage = idmessage;
+    }
+
+    public void setReporterId(String idreporter) {
+        this.idreporter = idreporter;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public void setReportedAt(LocalDateTime t) {
+        this.reportedat = t;
+    }
 
     @Override
     public String toString() {
-        return "ReportedMessage{id='" + id + "', messageId='" + messageId + "', reporterId='" + reporterId + "'}";
+        return "ReportedMessage{id='" + id + "', messageId='" + idmessage + "', reporterId='" + idreporter + "'}";
     }
 }

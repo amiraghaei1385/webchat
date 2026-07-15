@@ -2,26 +2,24 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Represents an emoji reaction placed by a user on a message.
-// (Bonus feature - Phase 1 skeleton only)
-
+// ری اکشن
 public class Reaction {
 
     private String id;
-    private String messageId;
-    private String userId;
+    private String idmessage;
+    private String iduser;
     private String emoji;
-    private LocalDateTime reactedAt;
+    private LocalDateTime reactedat;
 
     public Reaction() {
     }
 
-    public Reaction(String id, String messageId, String userId, String emoji) {
+    public Reaction(String id, String idmessage, String iduser, String emoji) {
         this.id = id;
-        this.messageId = messageId;
-        this.userId = userId;
+        this.idmessage = idmessage;
+        this.iduser = iduser;
         this.emoji = emoji;
-        this.reactedAt = LocalDateTime.now();
+        this.reactedat = LocalDateTime.now();
     }
 
     // Getters
@@ -30,11 +28,11 @@ public class Reaction {
     }
 
     public String getMessageId() {
-        return messageId;
+        return idmessage;
     }
 
     public String getUserId() {
-        return userId;
+        return iduser;
     }
 
     public String getEmoji() {
@@ -42,7 +40,7 @@ public class Reaction {
     }
 
     public LocalDateTime getReactedAt() {
-        return reactedAt;
+        return reactedat;
     }
 
     // Setters
@@ -50,12 +48,12 @@ public class Reaction {
         this.id = id;
     }
 
-    public void setMessageId(String messageId) {
-        this.messageId = messageId;
+    public void setMessageId(String idmessage) {
+        this.idmessage = idmessage;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserId(String iduser) {
+        this.iduser = iduser;
     }
 
     public void setEmoji(String emoji) {
@@ -63,11 +61,11 @@ public class Reaction {
     }
 
     public void setReactedAt(LocalDateTime t) {
-        this.reactedAt = t;
+        this.reactedat = t;
     }
 
     @Override
     public String toString() {
-        return "Reaction{messageId='" + messageId + "', userId='" + userId + "', emoji='" + emoji + "'}";
+        return "Reaction{messageId='" + idmessage + "', userId='" + iduser + "', emoji='" + emoji + "'}";
     }
 }

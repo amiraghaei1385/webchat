@@ -8,112 +8,108 @@ import repository.UserRepository;
 import security.PasswordHasher;
 import security.PasswordValidator;
 import security.SessionValidator;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-// مدیریت ورود، خروج و ثبت‌نام کاربران.
+import repository.LoginAttemptRepository;
 
+// مدیریت ورو خروج و ثبت‌نام کاربران
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final SessionRepository sessionRepository;
-    private final ChatService chatService;
-    // تعداد تلاش‌های ناموفق ورود
-    private final Map<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
+    private final UserRepository userrepo;
+    private final SessionRepository sessionrepo;
+    private final ChatService chatserv;
+    private final LoginAttemptRepository loginattemptrepo;
 
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, ChatService chatService) {
-        this.userRepository = userRepository;
-        this.sessionRepository = sessionRepository;
-        this.chatService = chatService;
-      }
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository,
+            ChatService chatService, LoginAttemptRepository loginAttemptRepository) {
+        this.userrepo = userRepository;
+        this.sessionrepo = sessionRepository;
+        this.chatserv = chatService;
+        this.loginattemptrepo = loginAttemptRepository;
+    }
 
-    // ثبت‌نام //
-
-    // یک کاربر جدید ثبت می‌کند.
-
+    // ثبت‌نام
     public Session register(String userId, String username, String plainPassword, String confirmPassword) {
+        // منحصربه‌فرد بودن آیدی
+        if (userrepo.findById(userId).isPresent()) {
+            throw new IllegalArgumentException("User ID already taken.");
+        }
         // بررسی تطابق رمز عبور
         if (!plainPassword.equals(confirmPassword)) {
             throw new IllegalArgumentException("Passwords do not match.");
         }
-
-        // اعتبارسنجی قوانین رمز عبور
+        // ب منحصربه‌فرد بودن نام کاربری
+        if (userrepo.findByUsername(username).isPresent()) {
+            throw new IllegalArgumentException("Username already taken.");
+        }
+        // اعتبار قوانین رمز عبور
         PasswordValidator.ValidationResult result = PasswordValidator.validate(plainPassword, username);
         if (!result.isValid()) {
             throw new IllegalArgumentException(result.getErrorsSummary());
         }
-
-        // بررسی منحصربه‌فرد بودن آیدی
-        if (userRepository.findById(userId).isPresent()) {
-            throw new IllegalArgumentException("User ID already taken.");
-        }
-
-        // بررسی منحصربه‌فرد بودن نام کاربری
-        if (userRepository.findByUsername(username).isPresent()) {
-            throw new IllegalArgumentException("Username already taken.");
-        }
-
-        // ساخت و ذخیره کاربر جدید
-        String passwordHash = PasswordHasher.hash(plainPassword);
-        User user = new User(userId, username, passwordHash);
-        userRepository.save(user);
-        chatService.createSavedMessagesChat(userId);
+        // سذخیره کاربر جدید
+        String passwordhash = PasswordHasher.hash(plainPassword);
+        User user = new User(userId, username, passwordhash);
+        userrepo.save(user);
+        chatserv.createSavedMessagesChat(userId);
         // ورود خودکار پس از ثبت‌نام
         Session session = SessionValidator.createSession(userId, false);
-        sessionRepository.save(session);
+        sessionrepo.save(session);
         return session;
     }
 
-    // ورود //
-
-    // ورود کاربر به سیستم.
-
+    // ورود
     public Session login(String username, String plainPassword, boolean rememberMe) {
-        Optional<User> optUser = userRepository.findByUsername(username);
-
-        if (optUser.isEmpty()) {
+        Optional<User> optuser = userrepo.findByUsername(username);
+        if (optuser.isEmpty()) {
             throw new IllegalArgumentException("Invalid username or password.");
         }
-
-        User user = optUser.get();
-
+        User user = optuser.get();
         // بررسی قفل بودن حساب
-        LoginAttempt attempt = loginAttempts.computeIfAbsent(user.getId(), LoginAttempt::new);
-        if (attempt.isLocked()) {
-            throw new IllegalStateException("Account is temporarily locked. Please try again later.");
+        Optional<LoginAttempt> optattempt = loginattemptrepo.findByUserId(user.getId());
+        LoginAttempt attempt;
+        if (optattempt.isPresent()) {
+            attempt = optattempt.get();
+        } else {
+            attempt = new LoginAttempt(user.getId());
         }
-
         // بررسی صحت رمز عبور
         if (!PasswordHasher.verify(plainPassword, user.getPasswordHash())) {
             attempt.recordFailure();
+            loginattemptrepo.save(attempt);
             throw new IllegalArgumentException("Invalid username or password.");
         }
-
+        if (attempt.isLocked()) {
+            throw new IllegalStateException("Account is temporarily locked. Please try again later.");
+        }
         // ورود موفق
         attempt.recordSuccess();
+        loginattemptrepo.save(attempt);
         Session session = SessionValidator.createSession(user.getId(), rememberMe);
-        sessionRepository.save(session);
+        sessionrepo.save(session);
         return session;
     }
 
-    // خروج //
-
-    // خروج کاربر با غیرفعال کردن نشست جاری.
-
+    // خروج
     public void logout(String sessionToken) {
-        sessionRepository.findByToken(sessionToken).ifPresent(session -> {
-            SessionValidator.invalidate(session);
-            sessionRepository.update(session);
-        });
+        Optional<Session> optsession = sessionrepo.findByToken(sessionToken);
+        if (optsession.isEmpty()) {
+            return;
+        }
+        Session session = optsession.get();
+        SessionValidator.invalidate(session);
+        sessionrepo.update(session);
     }
 
-    // اعتبارسنجی نشست //
-
-    // معتبر بودن نشست را بررسی می‌کند.
-
+    // اعتبارسنجی نشست
     public Optional<User> validateSession(String sessionToken) {
-        return sessionRepository.findByToken(sessionToken)
-                .filter(SessionValidator::isValid)
-                .flatMap(session -> userRepository.findById(session.getUserId()));
+        Optional<Session> optsession = sessionrepo.findByToken(sessionToken);
+        if (optsession.isEmpty()) {
+            return Optional.empty();
+        }
+        Session session = optsession.get();
+        if (!SessionValidator.isValid(session)) {
+            return Optional.empty();
+        }
+        return userrepo.findById(session.getUserId());
     }
 }

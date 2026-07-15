@@ -4,7 +4,6 @@ import models.Session;
 import java.util.List;
 import java.util.Optional;
 
-// قرارداد مربوط به تمام عملیات ذخیره‌سازی و بازیابی نشست‌ها (Session)
 public interface SessionRepository {
 
     void save(Session session);

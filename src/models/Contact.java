@@ -2,36 +2,34 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Represents a contact relationship between two users.
-// Also tracks whether the owner has blocked the contact.
-
+// مدل کانتکت
 public class Contact {
 
-    private String ownerId; // the user who added this contact
-    private String contactId; // the user who was added
-    private String nickname; // optional custom name set by the owner
-    private boolean isBlocked;
-    private LocalDateTime addedAt;
-    private boolean isContact; // آیا واقعاً به مخاطبین اضافه شده یا فقط بلاک شده
+    private String idowner;
+    private String idcontact;
+    private String nickname;
+    private boolean isblocked;
+    private LocalDateTime addat;
+    private boolean iscontact;
 
     public Contact() {
     }
 
-    public Contact(String ownerId, String contactId) {
-        this.ownerId = ownerId;
-        this.contactId = contactId;
-        this.isBlocked = false;
-        this.isContact = true; // پیش‌فرض: واقعاً مخاطب است
-        this.addedAt = LocalDateTime.now();
+    public Contact(String idowner, String idcontact) {
+        this.idowner = idowner;
+        this.idcontact = idcontact;
+        this.isblocked = false;
+        this.iscontact = true;
+        this.addat = LocalDateTime.now();
     }
 
     // Getters
     public String getOwnerId() {
-        return ownerId;
+        return idowner;
     }
 
     public String getContactId() {
-        return contactId;
+        return idcontact;
     }
 
     public String getNickname() {
@@ -39,20 +37,20 @@ public class Contact {
     }
 
     public boolean isBlocked() {
-        return isBlocked;
+        return isblocked;
     }
 
     public LocalDateTime getAddedAt() {
-        return addedAt;
+        return addat;
     }
 
     // Setters
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+    public void setOwnerId(String idowner) {
+        this.idowner = idowner;
     }
 
-    public void setContactId(String contactId) {
-        this.contactId = contactId;
+    public void setContactId(String idcontact) {
+        this.idcontact = idcontact;
     }
 
     public void setNickname(String nickname) {
@@ -60,23 +58,23 @@ public class Contact {
     }
 
     public void setBlocked(boolean blocked) {
-        this.isBlocked = blocked;
+        this.isblocked = blocked;
     }
 
     public void setAddedAt(LocalDateTime t) {
-        this.addedAt = t;
+        this.addat = t;
     }
 
     public boolean isContact() {
-        return isContact;
+        return iscontact;
     }
 
-    public void setContact(boolean isContact) {
-        this.isContact = isContact;
+    public void setContact(boolean iscontact) {
+        this.iscontact = iscontact;
     }
 
     @Override
     public String toString() {
-        return "Contact{ownerId='" + ownerId + "', contactId='" + contactId + "', isBlocked=" + isBlocked + "}";
+        return "Contact{ownerId='" + idowner + "', contactId='" + idcontact + "', isBlocked=" + isblocked + "}";
     }
 }

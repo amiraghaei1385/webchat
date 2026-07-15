@@ -9,138 +9,167 @@ import repository.ReportedMessageRepository;
 import repository.UserRepository;
 import security.PasswordHasher;
 import security.PasswordValidator;
-import java.util.List;
+import java.util.*;
+import repository.ChatRepository;
 
-/**
- * عملیات مدیریتی که از طریق CLI ادمین انجام می‌شود.
- * فاز اول: مدیریت کاربران، گروه‌ها و مشاهده پیام‌های گزارش‌شده.
- */
+// عملیات مدیریتی ادمین
 public class AdminService {
 
-    private final UserRepository userRepository;
-    private final GroupRepository groupRepository;
-    private final ReportedMessageRepository reportedMessageRepository;
-    private final GroupService groupService;
+    private final UserRepository userrepo;
+    private final GroupRepository grouprepo;
+    private final ReportedMessageRepository reportedmessagerepo;
+    private final GroupService groupserv;
+    private final ChatRepository chatrepo;
 
     public AdminService(UserRepository userRepository,
             GroupRepository groupRepository,
             ReportedMessageRepository reportedMessageRepository,
-            GroupService groupService) {
-        this.userRepository = userRepository;
-        this.groupRepository = groupRepository;
-        this.reportedMessageRepository = reportedMessageRepository;
-        this.groupService = groupService;
+            GroupService groupService,
+            ChatRepository chatRepository) {
+        this.userrepo = userRepository;
+        this.grouprepo = groupRepository;
+        this.reportedmessagerepo = reportedMessageRepository;
+        this.groupserv = groupService;
+        this.chatrepo = chatRepository;
     }
 
-    // مدیریت کاربران //
-
-    // دریافت لیست تمام کاربران.
-
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    /**
-     * افزودن کاربر جدید توسط ادمین.
-     * مقادیر ثبت‌نام به صورت دستی توسط ادمین وارد می‌شود.
-     */
+    // افزودن کاربر جدید
     public User addUser(String userId, String username, String plainPassword) {
-        if (userRepository.findById(userId).isPresent()) {
-            throw new IllegalArgumentException("User ID already taken.");
-        }
-        if (userRepository.findByUsername(username).isPresent()) {
+        if (userrepo.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("Username already taken.");
         }
-
-        PasswordValidator.ValidationResult result = PasswordValidator.validate(plainPassword, username);
-        if (!result.isValid()) {
-            throw new IllegalArgumentException(result.getErrorsSummary());
+        if (userrepo.findById(userId).isPresent()) {
+            throw new IllegalArgumentException("User ID already taken.");
         }
-
+        PasswordValidator.ValidationResult res = PasswordValidator.validate(plainPassword, username);
+        if (!res.isValid()) {
+            throw new IllegalArgumentException(res.getErrorsSummary());
+        }
         User user = new User(userId, username, PasswordHasher.hash(plainPassword));
-        userRepository.save(user);
+        userrepo.save(user);
         return user;
     }
 
-    // حذف کاربر توسط ادمین.
+    // لیست تمام کاربران ریترن میشه
+    public List<User> getAllUsers() {
+        return userrepo.findAll();
+    }
 
+    // کاربر توسط ادمین حذف میشه
     public void deleteUser(String userId) {
-        if (userRepository.findById(userId).isEmpty()) {
+        Optional<User> optuser = userrepo.findById(userId);
+        if (optuser.isEmpty()) {
             throw new IllegalArgumentException("User not found.");
         }
-        userRepository.delete(userId);
+        User user = optuser.get();
+        user.setDeleted(true);
+        user.setOnline(false);
+        userrepo.update(user);
     }
 
-    // مدیریت گروه‌ها //
+    // ویرایش کاربر توسط ادمین
+    public User editUser(String userId, String newUsername, String newUserId) {
+        Optional<User> optuser = userrepo.findById(userId);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
 
-    // دریافت لیست تمام گروه‌ها.
+        if (newUsername != null && !newUsername.isBlank()) {
+            Optional<User> sameUsername = userrepo.findByUsername(newUsername);
+            if (sameUsername.isPresent() && !sameUsername.get().getId().equals(userId)) {
+                throw new IllegalArgumentException("Username already taken.");
+            }
+            user.setUsername(newUsername);
+        }
 
-    public List<Group> getAllGroups() {
-        return groupRepository.findAll();
+        if (newUserId != null && !newUserId.isBlank() && !newUserId.equals(userId)) {
+            if (userrepo.findById(newUserId).isPresent()) {
+                throw new IllegalArgumentException("User ID already taken.");
+            }
+            user.setId(newUserId);
+        }
+
+        userrepo.update(user);
+        return user;
     }
 
-    // دریافت لیست اعضای یک گروه.
-
-    public List<GroupMember> getGroupMembers(String groupId) {
-        return groupRepository.findMembersByGroupId(groupId);
-    }
-
-    // ایجاد گروه جدید توسط ادمین.
-
+    // ساخت گروه توسط ادمین
     public Group createGroup(String name, String ownerId) {
-        return groupService.createGroup(name, ownerId);
+        return groupserv.createGroup(name, ownerId);
     }
 
-    // حذف گروه توسط ادمین.
-
-    public void deleteGroup(String groupId) {
-        if (groupRepository.findById(groupId).isEmpty()) {
-            throw new IllegalArgumentException("Group not found.");
-        }
-        groupRepository.delete(groupId);
+    // لیست اعضای گروه
+    public List<GroupMember> getGroupMembers(String groupId) {
+        return grouprepo.findMembersByGroupId(groupId);
     }
 
-    // افزودن کاربر به گروه توسط ادمین (بدون نیاز به بررسی سطح دسترسی).
-
-    public void addUserToGroup(String groupId, String userId) {
-        if (groupRepository.findById(groupId).isEmpty()) {
-            throw new IllegalArgumentException("Group not found.");
-        }
-        if (userRepository.findById(userId).isEmpty()) {
-            throw new IllegalArgumentException("User not found.");
-        }
-        if (groupRepository.findMember(groupId, userId).isPresent()) {
-            throw new IllegalArgumentException("User is already a member.");
-        }
-
-        GroupMember member = new GroupMember(groupId, userId, GroupMember.Role.MEMBER);
-        groupRepository.saveMember(member);
+    // لیست تمام گروه‌ها
+    public List<Group> getAllGroups() {
+        return grouprepo.findAll();
     }
 
-    // حذف کاربر از گروه توسط ادمین (بدون نیاز به بررسی سطح دسترسی).
-
+    // حذف کاربر از گروه
     public void removeUserFromGroup(String groupId, String userId) {
-        if (groupRepository.findMember(groupId, userId).isEmpty()) {
+        if (grouprepo.findMember(groupId, userId).isEmpty()) {
             throw new IllegalArgumentException("User is not a member of this group.");
         }
-        groupRepository.deleteMember(groupId, userId);
+        grouprepo.deleteMember(groupId, userId);
     }
 
-    // پیام‌های گزارش‌شده 
+    // حذف گروه توسط ادمین
+    public void deleteGroup(String groupId) {
+        Optional<Group> optgroup = grouprepo.findById(groupId);
+        if (optgroup.isEmpty()) {
+            throw new IllegalArgumentException("Group not found.");
+        }
+        Group group = optgroup.get();
+        grouprepo.delete(groupId);
+        chatrepo.delete(group.getChatId());
+    }
 
-    // دریافت لیست تمام پیام‌های گزارش‌شده.
-    // برای مشاهده در CLI ادمین استفاده می‌شود.
+    // ویرایش گروه توسط ادمین
+    public Group editGroup(String groupId, String newName, String newDescription) {
+        Optional<Group> optgroup = grouprepo.findById(groupId);
+        if (optgroup.isEmpty()) {
+            throw new IllegalArgumentException("Group not found.");
+        }
+        Group group = optgroup.get();
+        if (newDescription != null) {
+            group.setDescription(newDescription);
+        }
+        if (newName != null && !newName.isBlank()) {
+            group.setName(newName);
+        }
+        grouprepo.update(group);
+        return group;
+    }
 
+    // افزودن کاربر به گروه
+    public void addUserToGroup(String groupId, String userId) {
+        if (grouprepo.findById(groupId).isEmpty()) {
+            throw new IllegalArgumentException("Group not found.");
+        }
+        if (grouprepo.findMember(groupId, userId).isPresent()) {
+            throw new IllegalArgumentException("User is already a member.");
+        }
+        if (userrepo.findById(userId).isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        GroupMember member = new GroupMember(groupId, userId, GroupMember.Role.MEMBER);
+        grouprepo.saveMember(member);
+    }
+
+    // لیست پیام‌های گزارش‌شده
     public List<ReportedMessage> getReportedMessages() {
-        return reportedMessageRepository.findAll();
+        return reportedmessagerepo.findAll();
     }
 
-    // حذف یک گزارش پس از بررسی توسط ادمین.
-
+    // رد کردن یک گزارش
     public void dismissReport(String reportId) {
-        if (reportedMessageRepository.findById(reportId).isEmpty()) {
+        if (reportedmessagerepo.findById(reportId).isEmpty()) {
             throw new IllegalArgumentException("Report not found.");
         }
-        reportedMessageRepository.delete(reportId);
+        reportedmessagerepo.delete(reportId);
     }
 }

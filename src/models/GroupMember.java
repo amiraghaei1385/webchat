@@ -2,44 +2,40 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Represents the membership of a user in a group,
-// including their role (admin or regular member).
-
+// مدل ممبر گروپ
 public class GroupMember {
-    // Role of the member inside a group.
     public enum Role {
         OWNER,
         ADMIN,
         MEMBER
     }
 
-    private String groupId;
-    private String userId;
+    private String idgroup;
+    private String iduser;
     private Role role;
-    private LocalDateTime joinedAt;
+    private LocalDateTime joinat;
 
     public GroupMember() {
     }
 
-    public GroupMember(String groupId, String userId, Role role) {
-        this.groupId = groupId;
-        this.userId = userId;
+    public GroupMember(String idgroup, String iduser, Role role) {
+        this.idgroup = idgroup;
+        this.iduser = iduser;
         this.role = role;
-        this.joinedAt = LocalDateTime.now();
+        this.joinat = LocalDateTime.now();
     }
 
-    // Returns true if this member has admin-level privileges.
     public boolean isAdmin() {
         return role == Role.ADMIN || role == Role.OWNER;
     }
 
     // Getters
     public String getGroupId() {
-        return groupId;
+        return idgroup;
     }
 
     public String getUserId() {
-        return userId;
+        return iduser;
     }
 
     public Role getRole() {
@@ -47,16 +43,16 @@ public class GroupMember {
     }
 
     public LocalDateTime getJoinedAt() {
-        return joinedAt;
+        return joinat;
     }
 
     // Setters
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
+    public void setGroupId(String idgroup) {
+        this.idgroup = idgroup;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserId(String iduser) {
+        this.iduser = iduser;
     }
 
     public void setRole(Role role) {
@@ -64,11 +60,11 @@ public class GroupMember {
     }
 
     public void setJoinedAt(LocalDateTime t) {
-        this.joinedAt = t;
+        this.joinat = t;
     }
 
     @Override
     public String toString() {
-        return "GroupMember{groupId='" + groupId + "', userId='" + userId + "', role=" + role + "}";
+        return "GroupMember{groupId='" + idgroup + "', userId='" + iduser + "', role=" + role + "}";
     }
 }

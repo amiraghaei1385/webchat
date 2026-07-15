@@ -3,8 +3,7 @@ package repository;
 import models.User;
 import java.util.List;
 import java.util.Optional;
- 
-// قرارداد مربوط به تمام عملیات ذخیره‌سازی و بازیابی کاربران
+
 public interface UserRepository {
  
     void save(User user);

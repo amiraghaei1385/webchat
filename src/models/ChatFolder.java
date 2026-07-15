@@ -4,28 +4,27 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents a custom folder that groups multiple chats together.
-// (Bonus feature - Phase 1 skeleton only)
+// مدل فولدر
 
 public class ChatFolder {
 
     private String id;
-    private String ownerId; // user who created this folder
-    private String name; 
-    private List<String> chatIds; // chats inside this folder
-    private int orderIndex; // display order among folders
-    private LocalDateTime createdAt;
+    private String idowner;
+    private String name;
+    private List<String> idchat;
+    private int orderidx;
+    private LocalDateTime createat;
 
     public ChatFolder() {
-        this.chatIds = new ArrayList<>();
+        this.idchat = new ArrayList<>();
     }
 
-    public ChatFolder(String id, String ownerId, String name) {
+    public ChatFolder(String id, String idowner, String name) {
         this.id = id;
-        this.ownerId = ownerId;
+        this.idowner = idowner;
         this.name = name;
-        this.chatIds = new ArrayList<>();
-        this.createdAt = LocalDateTime.now();
+        this.idchat = new ArrayList<>();
+        this.createat = LocalDateTime.now();
     }
 
     // Getters
@@ -34,7 +33,7 @@ public class ChatFolder {
     }
 
     public String getOwnerId() {
-        return ownerId;
+        return idowner;
     }
 
     public String getName() {
@@ -42,15 +41,15 @@ public class ChatFolder {
     }
 
     public List<String> getChatIds() {
-        return chatIds;
+        return idchat;
     }
 
     public int getOrderIndex() {
-        return orderIndex;
+        return orderidx;
     }
 
     public LocalDateTime getCreatedAt() {
-        return createdAt;
+        return createat;
     }
 
     // Setters
@@ -58,8 +57,8 @@ public class ChatFolder {
         this.id = id;
     }
 
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+    public void setOwnerId(String idowner) {
+        this.idowner = idowner;
     }
 
     public void setName(String name) {
@@ -67,19 +66,19 @@ public class ChatFolder {
     }
 
     public void setChatIds(List<String> ids) {
-        this.chatIds = ids;
+        this.idchat = ids;
     }
 
     public void setOrderIndex(int index) {
-        this.orderIndex = index;
+        this.orderidx = index;
     }
 
     public void setCreatedAt(LocalDateTime t) {
-        this.createdAt = t;
+        this.createat = t;
     }
 
     @Override
     public String toString() {
-        return "ChatFolder{id='" + id + "', name='" + name + "', chats=" + chatIds.size() + "}";
+        return "ChatFolder{id='" + id + "', name='" + name + "', chats=" + idchat.size() + "}";
     }
 }

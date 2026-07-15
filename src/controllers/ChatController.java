@@ -4,62 +4,71 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import models.Chat;
 import models.Message;
+import models.MessageHistory;
 import models.User;
 import server.HttpApiServer;
 import server.RequestContext;
 import server.SessionManager;
 import services.ChatService;
+import services.HistoryService;
 import services.MessageService;
+import services.PinAndFolderService;
 import java.io.IOException;
 import java.util.List;
 
-// مدیریت چت‌ها و پیام‌ها
+// کنترلر چت‌ها و پیام‌ها
 public class ChatController implements HttpHandler {
 
-    private final ChatService chatService;
-    private final MessageService messageService;
+    private final ChatService chatserv;
+    private final MessageService messageserv;
+    private final HistoryService historyserv;
+    private final PinAndFolderService pinfolderserv;
     private final SessionManager sessionManager;
 
     public ChatController(ChatService chatService, MessageService messageService,
+            HistoryService historyService, PinAndFolderService pinAndFolderService,
             SessionManager sessionManager) {
-        this.chatService = chatService;
-        this.messageService = messageService;
+        this.chatserv = chatService;
+        this.messageserv = messageService;
+        this.historyserv = historyService;
+        this.pinfolderserv = pinAndFolderService;
         this.sessionManager = sessionManager;
     }
 
-    @Override
+    // ورودی اصلی درخواست‌ها
     public void handle(HttpExchange exchange) throws IOException {
         RequestContext ctx = new RequestContext(exchange);
-
-        // بررسی احراز هویت برای تمام endpoint های این کنترلر
+        // چک احراز هویت واسه همه‌ی مسیرهای این کنترلر
         User user = sessionManager.validate(ctx.getSessionToken()).orElse(null);
         if (user == null) {
             HttpApiServer.sendResponse(exchange, 401, "{\"error\":\"Unauthorized.\"}");
             return;
         }
-
         String path = ctx.getPath();
         String method = ctx.getMethod();
-
         try {
-            if ("GET".equals(method) && "/api/chats".equals(path)) {
-                handleGetChats(ctx, user);
-
-            } else if ("POST".equals(method) && "/api/chats/private".equals(path)) {
-                handleGetOrCreatePrivate(ctx, user);
-
-            } else if ("GET".equals(method) && path.matches("/api/chats/[^/]+/messages")) {
-                handleGetMessages(ctx, user);
-
-            } else if ("POST".equals(method) && path.matches("/api/chats/[^/]+/messages")) {
-                handleSendMessage(ctx, user);
-
-            } else if ("PUT".equals(method) && path.matches("/api/chats/[^/]+/pin")) {
-                handleSetPinned(ctx, user);
-
-            } else if ("PUT".equals(method) && path.matches("/api/chats/[^/]+/archive")) {
-                handleSetArchived(ctx, user);
-
+            if (method.equals("GET") && path.equals("/api/chats")) {
+                doGetChats(ctx, user);
+            } else if (method.equals("POST") && path.equals("/api/chats/private")) {
+                doGetOrCreatePrivate(ctx, user);
+            } else if (method.equals("POST") && path.matches("/api/chats/[^/]+/read")) {
+                doMarkAsRead(ctx, user);
+            } else if (method.equals("PUT") && path.matches("/api/chats/[^/]+/pin")) {
+                doSetPinned(ctx, user);
+            } else if (method.equals("PUT") && path.matches("/api/chats/[^/]+/archive")) {
+                doSetArchived(ctx, user);
+            } else if (method.equals("GET") && path.matches("/api/chats/[^/]+/messages")) {
+                doGetMessages(ctx, user);
+            } else if (method.equals("POST") && path.matches("/api/chats/[^/]+/messages")) {
+                doSendMessage(ctx, user);
+            } else if (method.equals("PUT") && path.matches("/api/chats/[^/]+/messages/[^/]+")) {
+                doEditMessage(ctx, user);
+            } else if (method.equals("DELETE") && path.matches("/api/chats/[^/]+/messages/[^/]+")) {
+                doDeleteMessage(ctx, user);
+            } else if (method.equals("POST") && path.matches("/api/chats/[^/]+/messages/[^/]+/report")) {
+                doReportMessage(ctx, user);
+            } else if (method.equals("GET") && path.matches("/api/chats/[^/]+/messages/[^/]+/history")) {
+                doGetMessageHistory(ctx, user);
             } else {
                 HttpApiServer.sendResponse(exchange, 404, "{\"error\":\"Not found.\"}");
             }
@@ -73,49 +82,54 @@ public class ChatController implements HttpHandler {
     }
 
     // چت‌ها //
-    // دریافت لیست چت‌های کاربر به ترتیب آخرین پیام
-    private void handleGetChats(RequestContext ctx, User user) throws IOException {
-        List<Chat> chats = chatService.getUserChats(user.getId());
-
+    // گرفتن لیست چت‌ها به ترتیب آخرین پیام با تعداد نخونده هر چت
+    private void doGetChats(RequestContext ctx, User user) throws IOException {
+        List<Chat> chats = chatserv.getUserChats(user.getId());
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < chats.size(); i++) {
             if (i > 0)
                 sb.append(",");
-            sb.append(chatToJson(chats.get(i)));
+            sb.append(chatToJson(chats.get(i), user));
         }
         sb.append("]");
         HttpApiServer.sendResponse(ctx.getExchange(), 200, sb.toString());
     }
 
-    // ایجاد یا دریافت چت خصوصی با کاربر دیگر
-    private void handleGetOrCreatePrivate(RequestContext ctx, User user) throws IOException {
-        String targetUserId = parseStr(ctx.getBody(), "targetUserId");
-        Chat chat = chatService.getOrCreatePrivateChat(user.getId(), targetUserId);
-        HttpApiServer.sendResponse(ctx.getExchange(), 200, chatToJson(chat));
+    // خوانده‌شده کردن چت
+    private void doMarkAsRead(RequestContext ctx, User user) throws IOException {
+        String idchat = getChatId(ctx.getPath());
+        chatserv.markAsRead(idchat, user.getId());
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Marked as read.\"}");
     }
 
-    // پین یا آنپین کردن چت
-    private void handleSetPinned(RequestContext ctx, User user) throws IOException {
-        String chatId = extractChatId(ctx.getPath());
-        boolean pinned = parseBool(ctx.getBody(), "pinned");
-        chatService.setPinned(chatId, pinned);
+    // ساخت یا گرفتن چت خصوصی با یه کاربر دیگه
+    private void doGetOrCreatePrivate(RequestContext ctx, User user) throws IOException {
+        String idusertarget = getStr(ctx.getBody(), "targetUserId");
+        Chat chat = chatserv.getOrCreatePrivateChat(user.getId(), idusertarget);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, chatToJson(chat, user));
+    }
+
+    // آرشیو یا خارج از آرشیو کردن
+    private void doSetArchived(RequestContext ctx, User user) throws IOException {
+        String chatId = getChatId(ctx.getPath());
+        boolean archived = getBool(ctx.getBody(), "archived");
+        pinfolderserv.setArchived(chatId, user.getId(), archived);
         HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Updated.\"}");
     }
 
-    // آرشیو یا خارج کردن از آرشیو
-    private void handleSetArchived(RequestContext ctx, User user) throws IOException {
-        String chatId = extractChatId(ctx.getPath());
-        boolean archived = parseBool(ctx.getBody(), "archived");
-        chatService.setArchived(chatId, archived);
+    // پین یا برداشتن پین چت
+    private void doSetPinned(RequestContext ctx, User user) throws IOException {
+        String idchat = getChatId(ctx.getPath());
+        boolean pin = getBool(ctx.getBody(), "pinned");
+        pinfolderserv.setPinned(idchat, user.getId(), pin);
         HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Updated.\"}");
     }
 
     // پیام‌ها //
-    // دریافت پیام‌های یک چت
-    private void handleGetMessages(RequestContext ctx, User user) throws IOException {
-        String chatId = extractChatId(ctx.getPath());
-        List<Message> messages = messageService.getChatMessages(chatId, user.getId());
-
+    // گرفتن پیام‌های یه چت
+    private void doGetMessages(RequestContext ctx, User user) throws IOException {
+        String idchat = getChatId(ctx.getPath());
+        List<Message> messages = messageserv.getChatMessages(idchat, user.getId());
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < messages.size(); i++) {
             if (i > 0)
@@ -126,21 +140,60 @@ public class ChatController implements HttpHandler {
         HttpApiServer.sendResponse(ctx.getExchange(), 200, sb.toString());
     }
 
-    // ارسال پیام جدید
-    private void handleSendMessage(RequestContext ctx, User user) throws IOException {
-        String chatId = extractChatId(ctx.getPath());
-        String content = parseStr(ctx.getBody(), "content");
-
-        Message message = messageService.sendMessage(chatId, user.getId(), content);
+    // فرستادن پیام جدید
+    private void doSendMessage(RequestContext ctx, User user) throws IOException {
+        String content = getStr(ctx.getBody(), "content");
+        String idchat = getChatId(ctx.getPath());
+        Message message = messageserv.sendMessage(idchat, user.getId(), content);
         HttpApiServer.sendResponse(ctx.getExchange(), 201, messageToJson(message));
     }
 
-    // تبدیل مدل به JSON //
-    private String chatToJson(Chat chat) {
+    // حذف یه پیام
+    private void doDeleteMessage(RequestContext ctx, User user) throws IOException {
+        String idmessage = getMessageId(ctx.getPath());
+        messageserv.deleteMessage(idmessage, user.getId());
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Message deleted.\"}");
+    }
+
+    // ویرایش یه پیام
+    private void doEditMessage(RequestContext ctx, User user) throws IOException {
+        String newcontent = getStr(ctx.getBody(), "content");
+        String idmessage = getMessageId(ctx.getPath());
+        messageserv.editMessage(idmessage, user.getId(), newcontent);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Message updated.\"}");
+    }
+
+    // گرفتن تاریخچه‌ی ویرایش و حذف یه پیام
+    private void doGetMessageHistory(RequestContext ctx, User user) throws IOException {
+        String idchat = getChatId(ctx.getPath());
+        String idmessage = getMessageId(ctx.getPath());
+        List<MessageHistory> history = historyserv.getHistory(idchat, idmessage, user.getId());
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < history.size(); i++) {
+            if (i > 0)
+                sb.append(",");
+            sb.append(historyToJson(history.get(i)));
+        }
+        sb.append("]");
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, sb.toString());
+    }
+
+    // گزارش کردن یه پیام
+    private void doReportMessage(RequestContext ctx, User user) throws IOException {
+        String idmessage = getMessageId(ctx.getPath());
+        String reason = getStr(ctx.getBody(), "reason");
+        messageserv.reportMessage(idmessage, user.getId(), reason);
+        HttpApiServer.sendResponse(ctx.getExchange(), 201, "{\"message\":\"Message reported.\"}");
+    }
+
+    // تبدیل به جیسون //
+    private String chatToJson(Chat chat, User requester) {
+        long unreadcount = messageserv.getUnreadCount(chat, requester.getId());
         return "{\"id\":\"" + chat.getId() + "\","
                 + "\"type\":\"" + chat.getType() + "\","
                 + "\"pinned\":" + chat.isPinned() + ","
                 + "\"archived\":" + chat.isArchived() + ","
+                + "\"unreadCount\":" + unreadcount + ","
                 + "\"lastMessageAt\":\""
                 + (chat.getLastMessageAt() != null ? chat.getLastMessageAt() : "") + "\"}";
     }
@@ -151,17 +204,35 @@ public class ChatController implements HttpHandler {
                 + "\"senderId\":\"" + msg.getSenderId() + "\","
                 + "\"content\":\"" + escape(msg.getEncryptedContent()) + "\","
                 + "\"sentAt\":\"" + msg.getSentAt() + "\","
+                + "\"editedAt\":\"" + (msg.getEditedAt() != null ? msg.getEditedAt() : "") + "\","
                 + "\"isDeleted\":" + msg.isDeleted() + "}";
     }
 
+    private String historyToJson(MessageHistory h) {
+        return "{\"id\":\"" + h.getId() + "\","
+                + "\"messageId\":\"" + h.getMessageId() + "\","
+                + "\"editorId\":\"" + h.getEditorId() + "\","
+                + "\"contentBefore\":\"" + escape(h.getEncryptedContentBefore()) + "\","
+                + "\"isDeletion\":" + h.isDeletion() + ","
+                + "\"version\":" + h.getVersion() + ","
+                + "\"editedAt\":\"" + (h.getEditedAt() != null ? h.getEditedAt() : "") + "\"}";
+    }
+
     // کمکی //
-    // استخراج chatId
-    private String extractChatId(String path) {
+    // استخراج بخش سوم
+    private String getChatId(String path) {
         String[] parts = path.split("/");
         return parts.length >= 4 ? parts[3] : "";
     }
 
-    private String parseStr(String json, String key) {
+    // استخراج بخش پنج
+    private String getMessageId(String path) {
+        String[] parts = path.split("/");
+        return parts.length >= 6 ? parts[5] : "";
+    }
+
+    // خواندن مقدار رشته‌ای از جیسون دستی
+    private String getStr(String json, String key) {
         String search = "\"" + key + "\":";
         int idx = json.indexOf(search);
         if (idx == -1)
@@ -176,7 +247,8 @@ public class ChatController implements HttpHandler {
         return end == -1 ? "" : json.substring(start, end);
     }
 
-    private boolean parseBool(String json, String key) {
+    // خواندن مقدار بولین از جیسون
+    private boolean getBool(String json, String key) {
         String search = "\"" + key + "\":";
         int idx = json.indexOf(search);
         if (idx == -1)
@@ -187,6 +259,7 @@ public class ChatController implements HttpHandler {
         return json.startsWith("true", vs);
     }
 
+    // فرار دادن کاراکترهای خاص
     private String escape(String s) {
         if (s == null)
             return "";

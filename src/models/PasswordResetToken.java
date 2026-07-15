@@ -2,34 +2,31 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Represents a temporary token used for password recovery.
-// A random password is generated server-side and linked to this token.
-// (Bonus feature - Phase 1 skeleton only)
-
+// مدل توکن برای ریست پس
 public class PasswordResetToken {
 
-    private String token; // random secure token
-    private String userId;
-    private String tempPassword; // randomly generated temporary password (hashed)
-    private LocalDateTime createdAt;
-    private LocalDateTime expiresAt;
-    private boolean isUsed;
+    private String token;
+    private String iduser;
+    private String temppass;
+    private LocalDateTime createat;
+    private LocalDateTime expiresat;
+    private boolean isused;
 
     public PasswordResetToken() {
     }
 
-    public PasswordResetToken(String token, String userId, String tempPassword, LocalDateTime expiresAt) {
+    public PasswordResetToken(String token, String iduser, String temppassword, LocalDateTime expiresat) {
         this.token = token;
-        this.userId = userId;
-        this.tempPassword = tempPassword;
-        this.createdAt = LocalDateTime.now();
-        this.expiresAt = expiresAt;
-        this.isUsed = false;
+        this.iduser = iduser;
+        this.temppass = temppassword;
+        this.createat = LocalDateTime.now();
+        this.expiresat = expiresat;
+        this.isused = false;
     }
 
-    // Returns true if the token can still be used.
+    // ایا توکن منقضی شده
     public boolean isValid() {
-        return !isUsed && LocalDateTime.now().isBefore(expiresAt);
+        return !isused && LocalDateTime.now().isBefore(expiresat);
     }
 
     // Getters
@@ -38,23 +35,23 @@ public class PasswordResetToken {
     }
 
     public String getUserId() {
-        return userId;
+        return iduser;
     }
 
     public String getTempPassword() {
-        return tempPassword;
+        return temppass;
     }
 
     public LocalDateTime getCreatedAt() {
-        return createdAt;
+        return createat;
     }
 
     public LocalDateTime getExpiresAt() {
-        return expiresAt;
+        return expiresat;
     }
 
     public boolean isUsed() {
-        return isUsed;
+        return isused;
     }
 
     // Setters
@@ -62,28 +59,28 @@ public class PasswordResetToken {
         this.token = token;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserId(String iduser) {
+        this.iduser = iduser;
     }
 
     public void setTempPassword(String pwd) {
-        this.tempPassword = pwd;
+        this.temppass = pwd;
     }
 
     public void setCreatedAt(LocalDateTime t) {
-        this.createdAt = t;
+        this.createat = t;
     }
 
     public void setExpiresAt(LocalDateTime t) {
-        this.expiresAt = t;
+        this.expiresat = t;
     }
 
     public void setUsed(boolean used) {
-        this.isUsed = used;
+        this.isused = used;
     }
 
     @Override
     public String toString() {
-        return "PasswordResetToken{userId='" + userId + "', isUsed=" + isUsed + ", isValid=" + isValid() + "}";
+        return "PasswordResetToken{userId='" + iduser + "', isUsed=" + isused + ", isValid=" + isValid() + "}";
     }
 }

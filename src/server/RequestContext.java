@@ -7,12 +7,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-// نگه‌داری اطلاعات هر درخواست HTTP
+// نگه‌داری اطلاعات هر درخواست
 public class RequestContext {
 
     private final String method;
     private final String path;
-    private final Map<String, String> queryParams;
+    private final Map<String, String> querParams;
     private final String body;
     private final String sessionToken;
     private final HttpExchange exchange;
@@ -21,17 +21,17 @@ public class RequestContext {
         this.exchange = exchange;
         this.method = exchange.getRequestMethod();
         this.path = exchange.getRequestURI().getPath();
-        this.queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
+        this.querParams = parseQueryParams(exchange.getRequestURI().getQuery());
         this.body = readBody(exchange.getRequestBody());
         this.sessionToken = exchange.getRequestHeaders().getFirst("Authorization");
     }
 
-    // خواندن بدنه درخواست
+    //  بدنه درخواست را میخوانیم
     private String readBody(InputStream is) throws IOException {
         return new String(is.readAllBytes(), StandardCharsets.UTF_8);
     }
 
-    // پارس کردن query string به map
+    // پارس کردن کویری به مپ
     private Map<String, String> parseQueryParams(String query) {
         Map<String, String> params = new HashMap<>();
         if (query == null)
@@ -55,7 +55,7 @@ public class RequestContext {
     }
 
     public Map<String, String> getQueryParams() {
-        return queryParams;
+        return querParams;
     }
 
     public String getBody() {

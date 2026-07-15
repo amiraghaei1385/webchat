@@ -4,81 +4,90 @@ import models.Chat;
 import models.ChatType;
 import repository.ChatRepository;
 import utils.IdGenerator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-// مدیریت چت‌ها (خصوصی، گروهی و پیام‌های ذخیره‌شده).
+// مدیریت چت‌ها
 public class ChatService {
 
-    private final ChatRepository chatRepository;
+    private final ChatRepository chatrepo;
+    private final ContactService contactserv;
 
-    public ChatService(ChatRepository chatRepository) {
-        this.chatRepository = chatRepository;
+    public ChatService(ChatRepository chatRepository, ContactService contactService) {
+        this.chatrepo = chatRepository;
+        this.contactserv = contactService;
     }
 
-    // ایجاد چت خصوصی بین دو کاربر.
-    // اگر چت از قبل وجود داشته باشد، همان را برمی‌گرداند.
+    // چت خصوصی بین دو کاربر ایجاد میشه
     public Chat getOrCreatePrivateChat(String userId1, String userId2) {
         if (userId1.equals(userId2)) {
             throw new IllegalArgumentException("Use Saved Messages for messaging yourself.");
         }
-
-        List<Chat> userChats = chatRepository.findByUserId(userId1);
-        for (Chat chat : userChats) {
+        if (contactserv.isBlocked(userId2, userId1) || contactserv.isBlocked(userId1, userId2)) {
+            throw new IllegalStateException("Cannot start a chat: one user has blocked the other.");
+        }
+        List<Chat> userchats = chatrepo.findByUserId(userId1);
+        for (Chat chat : userchats) {
             if (chat.getType() == ChatType.PRIVATE && chat.getMemberIds().contains(userId2)) {
                 return chat;
             }
         }
-
         Chat chat = new Chat(IdGenerator.generate(), ChatType.PRIVATE);
         chat.addMember(userId1);
         chat.addMember(userId2);
-        chatRepository.save(chat);
+        chatrepo.save(chat);
         return chat;
     }
 
-    // ایجاد صندوق پیام‌های ذخیره‌شده برای کاربر جدید.
-    // هنگام ثبت‌نام فراخوانی می‌شود.
+    // صندوق پیام‌های ذخیره‌شده برای کاربر جدید ایجاد میشه
     public Chat createSavedMessagesChat(String userId) {
         Chat chat = new Chat(IdGenerator.generate(), ChatType.SAVED_MESSAGES);
         chat.addMember(userId);
-        chatRepository.save(chat);
+        chatrepo.save(chat);
         return chat;
     }
 
-    // دریافت لیست چت‌های کاربر به ترتیب آخرین پیام.
-    // برای صفحه اصلی استفاده می‌شود.
+    // ب لیست چت‌های کاربر به ترتیب آخرین پیام دریافت میشه
     public List<Chat> getUserChats(String userId) {
-        List<Chat> chats = new ArrayList<>(chatRepository.findByUserId(userId));
-        chats.sort((a, b) -> {
-            if (a.getLastMessageAt() == null)
-                return 1;
-            if (b.getLastMessageAt() == null)
-                return -1;
-            return b.getLastMessageAt().compareTo(a.getLastMessageAt());
-        });
+        List<Chat> chats = new ArrayList<>(chatrepo.findByUserId(userId));
+        for (int i = 0; i < chats.size(); i++) {
+            for (int j = 0; j < chats.size() - i - 1; j++) {
+                Chat a = chats.get(j);
+                Chat b = chats.get(j + 1);
+                if (isOlder(a, b)) {
+                    Chat temp = chats.get(j);
+                    chats.set(j, chats.get(j + 1));
+                    chats.set(j + 1, temp);
+                }
+            }
+        }
         return chats;
     }
 
-    // دریافت یک چت با آیدی.
+    // بررسی مرتب‌سازی
+    private boolean isOlder(Chat a, Chat b) {
+        if (a.getLastMessageAt() == null)
+            return true;
+        if (b.getLastMessageAt() == null)
+            return false;
+        return a.getLastMessageAt().compareTo(b.getLastMessageAt()) < 0;
+    }
+
+    // دریافت یک چت با آیدی
     public Optional<Chat> findById(String chatId) {
-        return chatRepository.findById(chatId);
+        return chatrepo.findById(chatId);
     }
 
-    // سنجاق یا آن‌پین کردن یک چت در صفحه اصلی.
-    public void setPinned(String chatId, boolean pinned) {
-        Chat chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new IllegalArgumentException("Chat not found."));
-        chat.setPinned(pinned);
-        chatRepository.update(chat);
-    }
-
-    // افزودن یا حذف یک چت از آرشیو.
-    public void setArchived(String chatId, boolean archived) {
-        Chat chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new IllegalArgumentException("Chat not found."));
-        chat.setArchived(archived);
-        chatRepository.update(chat);
+    // علامت‌گذاری اینکه کاربر پیام‌های این چت رو دیده
+    public void markAsRead(String chatId, String userId) {
+        Optional<Chat> found = chatrepo.findById(chatId);
+        if (found.isEmpty()) {
+            throw new IllegalArgumentException("Chat not found.");
+        }
+        Chat chat = found.get();
+        if (!chat.getMemberIds().contains(userId)) {
+            throw new IllegalStateException("Access denied: you are not a member of this chat.");
+        }
+        chat.markReadBy(userId);
+        chatrepo.update(chat);
     }
 }

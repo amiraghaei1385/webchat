@@ -2,84 +2,182 @@ package repository.file;
 
 import models.Message;
 import repository.MessageRepository;
-import utils.FileUtil;
-import utils.JsonUtil;
-import utils.PathUtil;
-import java.nio.file.Path;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
-/**
- * ذخیره‌سازی فایل‌محور پیام‌ها؛ هر پیام یک فایل storage/messages/{id}.txt دارد.
- *
- * نکته مهم درباره رمزنگاری: این کلاس هیچ‌گونه encrypt/decrypt انجام
- * نمی‌دهد و صرفاً هر مقداری که در فیلد encryptedContent پیام قرار دارد
- * را عیناً روی دیسک می‌نویسد. مسئولیت رمزنگاری بر عهده‌ی لایه‌ی بالاتر
- * (MessageService) است: قبل از فراخوانی save/update، سرویس باید محتوای
- * متن ساده را با security.MessageEncryptor.encrypt(...) رمزنگاری کرده
- * و نتیجه را در encryptedContent قرار داده باشد.
- */
 public class FileMessageRepository implements MessageRepository {
-
-    private final Map<String, Message> store = new ConcurrentHashMap<>();
+    private final Map<String, Message> messages = new ConcurrentHashMap<>();
+    private final File fold = new File("storage/messages");
 
     public FileMessageRepository() {
+        if (!fold.exists()) {
+            fold.mkdirs();
+        }
         loadAll();
     }
 
+    // خواندن همه
     private void loadAll() {
-        List<String> contents = FileUtil.readAllInDirectory(PathUtil.messagesDir());
-        for (String json : contents) {
-            Message message = JsonUtil.fromJson(json, Message.class);
-            if (message != null && message.getId() != null) {
-                store.put(message.getId(), message);
+        File[] files = fold.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            Message message = readMessageFromFile(file);
+            if (message != null) {
+                messages.put(message.getId(), message);
             }
         }
     }
 
-    private void persist(Message message) {
-        Path path = PathUtil.messageFile(message.getId());
-        FileUtil.writeAtomic(path, JsonUtil.toJson(message));
+    // خواندن یکی
+    private Message readMessageFromFile(File file) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String id = reader.readLine();
+            String idchat = reader.readLine();
+            String idsender = reader.readLine();
+            String encryptedcontent = reader.readLine();
+            String sentat = reader.readLine();
+            String editedat = reader.readLine();
+            String isdelete = reader.readLine();
+            String idreplytoMessage = reader.readLine();
+            String hasmedia = reader.readLine();
+            String idmediaMessage = reader.readLine();
+            String idforwardfromMessage = reader.readLine();
+            reader.close();
+            Message message = new Message();
+            message.setId(fixEmpty(id));
+            message.setChatId(fixEmpty(idchat));
+            message.setSenderId(fixEmpty(idsender));
+            message.setEncryptedContent(fixEmpty(encryptedcontent));
+            if (sentat != null && !sentat.equals("null")) {
+                message.setSentAt(LocalDateTime.parse(sentat));
+            }
+            if (editedat != null && !editedat.equals("null")) {
+                message.setEditedAt(LocalDateTime.parse(editedat));
+            }
+            message.setDeleted(Boolean.parseBoolean(isdelete));
+            message.setReplyToMessageId(fixEmpty(idreplytoMessage));
+            message.setHasMedia(Boolean.parseBoolean(hasmedia));
+            message.setMediaMessageId(fixEmpty(idmediaMessage));
+            message.setForwardedFromMessageId(fixEmpty(idforwardfromMessage));
+            return message;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // جلوگیری از خطای مقدار خالی
+    private String fixEmpty(String value) {
+        if (value == null || value.equals("null")) {
+            return null;
+        }
+        return value;
+    }
+
+    // نوشتن
+    private void saveFile(Message message) {
+        File file = new File(fold, message.getId() + ".txt");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(safe(message.getId()));
+            writer.newLine();
+            writer.write(safe(message.getChatId()));
+            writer.newLine();
+            writer.write(safe(message.getSenderId()));
+            writer.newLine();
+            writer.write(safe(message.getEncryptedContent()));
+            writer.newLine();
+            if (message.getSentAt() == null) {
+                writer.write(safe(null));
+            } else {
+                writer.write(message.getSentAt().toString());
+            }
+            writer.newLine();
+            if (message.getEditedAt() == null) {
+                writer.write(safe(null));
+            } else {
+                writer.write(message.getEditedAt().toString());
+            }
+            writer.newLine();
+            writer.write(String.valueOf(message.isDeleted()));
+            writer.newLine();
+            writer.write(safe(message.getReplyToMessageId()));
+            writer.newLine();
+            writer.write(String.valueOf(message.isHasMedia()));
+            writer.newLine();
+            writer.write(safe(message.getMediaMessageId()));
+            writer.newLine();
+            writer.write(safe(message.getForwardedFromMessageId()));
+            writer.newLine();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // مقدار خالی برای نوشتن
+    private String safe(String value) {
+        if (value == null) {
+            return "null";
+        }
+        return value;
     }
 
     @Override
     public void save(Message message) {
-        store.put(message.getId(), message);
-        persist(message);
-    }
-
-    @Override
-    public Optional<Message> findById(String id) {
-        return Optional.ofNullable(store.get(id));
-    }
-
-    @Override
-    public List<Message> findByChatId(String chatId) {
-        // طبق قرارداد اینترفیس: قدیمی‌ترین به جدیدترین (صعودی بر اساس sentAt)
-        return store.values().stream()
-                .filter(m -> m.getChatId().equals(chatId))
-                .sorted((a, b) -> {
-                    LocalDateTime at = a.getSentAt();
-                    LocalDateTime bt = b.getSentAt();
-                    if (at == null && bt == null) return 0;
-                    if (at == null) return -1;
-                    if (bt == null) return 1;
-                    return at.compareTo(bt);
-                })
-                .collect(Collectors.toList());
+        messages.put(message.getId(), message);
+        saveFile(message);
     }
 
     @Override
     public void update(Message message) {
-        store.put(message.getId(), message);
-        persist(message);
+        messages.put(message.getId(), message);
+        saveFile(message);
+    }
+
+    @Override
+    public Optional<Message> findById(String id) {
+        return Optional.ofNullable(messages.get(id));
+    }
+
+    @Override
+    public List<Message> findByChatId(String chatId) {
+        List<Message> res = new ArrayList<>();
+        for (Message message : messages.values()) {
+            if (message.getChatId().equals(chatId)) {
+                res.add(message);
+            }
+        }
+        Collections.sort(res, new Comparator<Message>() {
+            @Override
+            public int compare(Message m1, Message m2) {
+                if (m1.getSentAt() == null && m2.getSentAt() == null) {
+                    return 0;
+                }
+                if (m1.getSentAt() == null) {
+                    return -1;
+                }
+                if (m2.getSentAt() == null) {
+                    return 1;
+                }
+                return m1.getSentAt().compareTo(m2.getSentAt());
+            }
+        });
+        return res;
     }
 
     @Override
     public void delete(String id) {
-        store.remove(id);
-        FileUtil.delete(PathUtil.messageFile(id));
+        messages.remove(id);
+        File file = new File(fold, id + ".txt");
+        if (file.exists()) {
+            file.delete();
+        }
     }
+
 }

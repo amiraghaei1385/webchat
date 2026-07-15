@@ -4,7 +4,6 @@ import models.Contact;
 import java.util.List;
 import java.util.Optional;
  
-// قرارداد مربوط به تمام عملیات ذخیره‌سازی و بازیابی مخاطبین
 public interface ContactRepository {
  
     void save(Contact contact);

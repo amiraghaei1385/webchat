@@ -2,86 +2,80 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Tracks failed login attempts for a user account.
-// After 5 consecutive failures the account is temporarily locked.
-
+// مدل لاگین اتمپ
 public class LoginAttempt {
 
-    private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final int LOCK_DURATION_MINUTES = 15;
-
-    private String userId;
-    private int failedCount; // number of consecutive failed attempts
-    private LocalDateTime lastAttemptAt;
-    private LocalDateTime lockedUntil; // null if not locked
+    private static final int MAX_failattempt = 5;
+    private static final int LOCK_durationmin = 15;
+    private String iduser;
+    private int failcount;
+    private LocalDateTime lastattemptat;
+    private LocalDateTime lockeduntil;
 
     public LoginAttempt() {
     }
 
-    public LoginAttempt(String userId) {
-        this.userId = userId;
-        this.failedCount = 0;
-        this.lastAttemptAt = LocalDateTime.now();
-        this.lockedUntil = null;
+    public LoginAttempt(String iduser) {
+        this.iduser = iduser;
+        this.failcount = 0;
+        this.lastattemptat = LocalDateTime.now();
+        this.lockeduntil = null;
     }
 
-    // Records a failed login. Locks the account if MAX_FAILED_ATTEMPTS is reached.
     public void recordFailure() {
-        failedCount++;
-        lastAttemptAt = LocalDateTime.now();
-        if (failedCount >= MAX_FAILED_ATTEMPTS) {
-            lockedUntil = LocalDateTime.now().plusMinutes(LOCK_DURATION_MINUTES);
+        failcount++;
+        lastattemptat = LocalDateTime.now();
+        if (failcount >= MAX_failattempt) {
+            lockeduntil = LocalDateTime.now().plusMinutes(LOCK_durationmin);
         }
     }
 
-    // Resets the counter after a successful login.
     public void recordSuccess() {
-        failedCount = 0;
-        lockedUntil = null;
-        lastAttemptAt = LocalDateTime.now();
+        failcount = 0;
+        lockeduntil = null;
+        lastattemptat = LocalDateTime.now();
     }
 
-    // Returns true if the account is currently locked.
     public boolean isLocked() {
-        return lockedUntil != null && LocalDateTime.now().isBefore(lockedUntil);
+        return lockeduntil != null && LocalDateTime.now().isBefore(lockeduntil);
     }
 
     // Getters
     public String getUserId() {
-        return userId;
+        return iduser;
     }
 
     public int getFailedCount() {
-        return failedCount;
+        return failcount;
     }
 
     public LocalDateTime getLastAttemptAt() {
-        return lastAttemptAt;
+        return lastattemptat;
     }
 
     public LocalDateTime getLockedUntil() {
-        return lockedUntil;
+        return lockeduntil;
     }
 
     // Setters
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserId(String iduser) {
+        this.iduser = iduser;
     }
 
     public void setFailedCount(int count) {
-        this.failedCount = count;
+        this.failcount = count;
     }
 
     public void setLastAttemptAt(LocalDateTime t) {
-        this.lastAttemptAt = t;
+        this.lastattemptat = t;
     }
 
     public void setLockedUntil(LocalDateTime t) {
-        this.lockedUntil = t;
+        this.lockeduntil = t;
     }
 
     @Override
     public String toString() {
-        return "LoginAttempt{userId='" + userId + "', failedCount=" + failedCount + ", isLocked=" + isLocked() + "}";
+        return "LoginAttempt{userId='" + iduser + "', failedCount=" + failcount + ", isLocked=" + isLocked() + "}";
     }
 }

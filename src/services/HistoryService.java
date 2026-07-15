@@ -7,92 +7,81 @@ import repository.HistoryRepository;
 import repository.MessageRepository;
 import security.MessageEncryptor;
 import utils.IdGenerator;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
-/**
- * مدیریت تاریخچه‌ی ویرایش پیام‌ها.
- *
- * هر بار که یک پیام ویرایش می‌شود، محتوای رمزشده‌ی قبل از ویرایش
- * (پیش از اعمال تغییر) در این سرویس ثبت می‌شود تا یک لاگ غیرقابل‌تغییر
- * (immutable audit trail) از تمام نسخه‌های قبلی پیام حفظ شود؛ مشابه
- * قابلیت "Edited" در تلگرام که با کلیک روی آن می‌توان نسخه‌های قبلی
- * پیام را دید.
- */
+// مدیریت تاریخچه ویرایش و حذف پیام‌ها
 public class HistoryService {
 
-    private final HistoryRepository historyRepository;
-    private final ChatRepository chatRepository;
-    private final MessageRepository messageRepository;
+    private final HistoryRepository historyrepo;
+    private final ChatRepository chatrepo;
+    private final MessageRepository messagerepo;
 
     public HistoryService(HistoryRepository historyRepository,
             ChatRepository chatRepository,
             MessageRepository messageRepository) {
-        this.historyRepository = historyRepository;
-        this.chatRepository = chatRepository;
-        this.messageRepository = messageRepository;
+        this.historyrepo = historyRepository;
+        this.chatrepo = chatRepository;
+        this.messagerepo = messageRepository;
     }
 
-    /**
-     * ثبت یک نسخه‌ی جدید از تاریخچه، درست قبل از این‌که محتوای پیام
-     * در MessageRepository به‌روزرسانی شود.
-     * پیامی که در حال ویرایش است (قبل از اعمال تغییر جدید)
-     * کاربری که این ویرایش را انجام می‌دهد
-     */
+    // تاریخچه برای حذف پیام ثبت میشه
+    public void recordDeletion(Message message, String editorId) {
+        recordHistoryEntry(message, editorId, true);
+    }
+
+    // تاریخچه یک پیام کامل حذف میشه
+    public void deleteHistory(String chatId, String messageId) {
+        historyrepo.deleteByMessageId(chatId, messageId);
+    }
+
+    // ثبت تاریخچه برای ویرایش پیام
     public void recordEdit(Message message, String editorId) {
-        // قفل بر اساس شناسه‌ی پیام تا محاسبه‌ی شماره نسخه و ذخیره‌ی آن
-        // به‌صورت اتمیک انجام شود و دو ترد هم‌زمان یک شماره نسخه تکراری نسازند
+        recordHistoryEntry(message, editorId, false);
+    }
+
+    // دریافت تاریخچه یک پیام
+    public List<MessageHistory> getHistory(String chatId, String messageId, String requesterId) {
+        Optional<models.Chat> optchat = chatrepo.findById(chatId);
+        if (optchat.isEmpty() || !optchat.get().getMemberIds().contains(requesterId)) {
+            throw new IllegalStateException("Access denied: you are not a member of this chat.");
+        }
+        Optional<Message> optmessage = messagerepo.findById(messageId);
+        if (optmessage.isEmpty() || !optmessage.get().getChatId().equals(chatId)) {
+            throw new IllegalArgumentException("Message not found in this chat.");
+        }
+        List<MessageHistory> result = new ArrayList<>();
+        for (MessageHistory item : historyrepo.findByMessageId(chatId, messageId)) {
+            result.add(toDecryptedCopy(item));
+        }
+        return result;
+    }
+
+    // منطق مشترک ثبت یک نسخه جدید
+    private void recordHistoryEntry(Message message, String editorId, boolean isDeletion) {
         synchronized (message.getId().intern()) {
-            int nextVersion = historyRepository.countByMessageId(message.getChatId(),
-                    message.getId()) + 1;
+            int nextVersion = historyrepo.countByMessageId(message.getChatId(), message.getId()) + 1;
             MessageHistory history = new MessageHistory(
                     IdGenerator.generate(),
                     message.getId(),
                     message.getChatId(),
                     editorId,
                     message.getEncryptedContent(),
-                    nextVersion);
-            historyRepository.save(history);
+                    nextVersion,
+                    isDeletion);
+            historyrepo.save(history);
         }
     }
 
-    /**
-     * دریافت تمام نسخه‌های تاریخچه‌ی یک پیام، به ترتیب قدیمی به جدید،
-     * با محتوای رمزگشایی‌شده (قابل‌نمایش برای کاربر).
-     *
-     * دسترسی فقط برای اعضای چتی که پیام در آن قرار دارد مجاز است
-     * (جلوگیری از BOLA - مشابه الگوی امنیتی MessageService).
-     */
-    public List<MessageHistory> getHistory(String chatId, String messageId, String requesterId) {
-        chatRepository.findById(chatId)
-                .filter(chat -> chat.getMemberIds().contains(requesterId))
-                .orElseThrow(() -> new IllegalStateException("Access denied: you are not a member of this chat."));
-
-        // اطمینان از این‌که پیام واقعاً متعلق به این چت است
-        messageRepository.findById(messageId)
-                .filter(m -> m.getChatId().equals(chatId))
-                .orElseThrow(() -> new IllegalArgumentException("Message not found in this chat."));
-
-        return historyRepository.findByMessageId(chatId, messageId).stream()
-                .map(this::toDecryptedCopy)
-                .collect(Collectors.toList());
-    }
-
-    // حذف تاریخچه هنگام حذف کامل/دائمی یک پیام (در صورت نیاز در آینده).
-    public void deleteHistory(String chatId, String messageId) {
-        historyRepository.deleteByMessageId(chatId, messageId);
-    }
-
-    // یک نسخه‌ی جدید از رکورد تاریخچه می‌سازد که محتوایش رمزگشایی‌شده است،
-    // بدون این‌که نسخه‌ی رمزشده‌ی ذخیره‌شده روی دیسک دست‌خورده شود.
+    // یک کپی تاریخچه میسازه
     private MessageHistory toDecryptedCopy(MessageHistory original) {
         MessageHistory copy = new MessageHistory();
+        copy.setDeletion(original.isDeletion());
         copy.setId(original.getId());
-        copy.setMessageId(original.getMessageId());
-        copy.setChatId(original.getChatId());
         copy.setEditorId(original.getEditorId());
+        copy.setMessageId(original.getMessageId());
         copy.setEncryptedContentBefore(MessageEncryptor.decrypt(original.getEncryptedContentBefore()));
         copy.setVersion(original.getVersion());
+        copy.setChatId(original.getChatId());
         copy.setEditedAt(original.getEditedAt());
         return copy;
     }

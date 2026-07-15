@@ -10,40 +10,43 @@ import server.RequestContext;
 import server.SessionManager;
 import services.GroupService;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
-// مدیریت گروه‌ها 
+// کنترلر گروه‌ها
 public class GroupController implements HttpHandler {
 
-    private final GroupService groupService;
-    private final SessionManager sessionManager;
+    private final GroupService groupserv;
+    private final SessionManager sessionmanager;
 
     public GroupController(GroupService groupService, SessionManager sessionManager) {
-        this.groupService = groupService;
-        this.sessionManager = sessionManager;
+        this.groupserv = groupService;
+        this.sessionmanager = sessionManager;
     }
 
-    @Override
+    // ورودی اصلی درخواست‌ها
     public void handle(HttpExchange exchange) throws IOException {
         RequestContext ctx = new RequestContext(exchange);
-
-        // بررسی احراز هویت برای تمام endpoint های این کنترلر
-        User user = sessionManager.validate(ctx.getSessionToken()).orElse(null);
+        // چک احراز هویت واسه همه‌ی مسیرهای این کنترلر
+        User user = sessionmanager.validate(ctx.getSessionToken()).orElse(null);
         if (user == null) {
             HttpApiServer.sendResponse(exchange, 401, "{\"error\":\"Unauthorized.\"}");
             return;
         }
-
         String path = ctx.getPath();
         String method = ctx.getMethod();
-
         try {
-            if ("POST".equals(method) && "/api/groups".equals(path)) {
-                handleCreateGroup(ctx, user);
-
-            } else if ("GET".equals(method) && path.matches("/api/groups/[^/]+")) {
-                handleGetGroup(ctx);
-
+            if (method.equals("POST") && path.equals("/api/groups")) {
+                doCreateGroup(ctx, user);
+            } else if (method.equals("GET") && path.matches("/api/groups/[^/]+")) {
+                doGetGroup(ctx);
+            } else if (method.equals("DELETE") && path.matches("/api/groups/[^/]+/members/[^/]+")) {
+                doRemoveMember(ctx, user);
+            } else if (method.equals("POST") && path.matches("/api/groups/[^/]+/leave")) {
+                doLeaveGroup(ctx, user);
+            } else if (method.equals("PUT") && path.matches("/api/groups/[^/]+")) {
+                doEditGroup(ctx, user);
+            } else if (method.equals("POST") && path.matches("/api/groups/[^/]+/members")) {
+                doAddMember(ctx, user);
             } else {
                 HttpApiServer.sendResponse(exchange, 404, "{\"error\":\"Not found.\"}");
             }
@@ -56,28 +59,64 @@ public class GroupController implements HttpHandler {
         }
     }
 
-    // ساخت گروه //
-    // ساخت یک گروه جدید با کاربر فعلی به عنوان مالک
-    private void handleCreateGroup(RequestContext ctx, User user) throws IOException {
-        String name = parseStr(ctx.getBody(), "name");
-
-        Group group = groupService.createGroup(name, user.getId());
+    // اینجا گروه ساخته میشه
+    private void doCreateGroup(RequestContext ctx, User user) throws IOException {
+        String name = getStr(ctx.getBody(), "name");
+        Group group = groupserv.createGroup(name, user.getId());
         HttpApiServer.sendResponse(ctx.getExchange(), 201, groupToJson(group));
     }
 
-    // مشاهده اطلاعات گروه //
-    // دریافت اطلاعات گروه به همراه لیست اعضا
-    private void handleGetGroup(RequestContext ctx) throws IOException {
-        String groupId = extractGroupId(ctx.getPath());
+    // اینجا عضو حذف میشه
+    private void doRemoveMember(RequestContext ctx, User user) throws IOException {
+        String[] parts = ctx.getPath().split("/");
+        String idtargetuser = parts.length >= 6 ? parts[5] : "";
+        String idgroup = parts.length >= 4 ? parts[3] : "";
+        groupserv.removeMember(idgroup, user.getId(), idtargetuser);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Member removed.\"}");
+    }
 
-        Group group = groupService.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found."));
-        List<GroupMember> members = groupService.getMembers(groupId);
-
+    // اینجا اطلاعات گروه برگردونده میشه
+    private void doGetGroup(RequestContext ctx) throws IOException {
+        String idgroup = getGroupId(ctx.getPath());
+        Optional<Group> found = groupserv.findById(idgroup);
+        if (found.isEmpty()) {
+            throw new IllegalArgumentException("Group not found.");
+        }
+        Group group = found.get();
+        List<GroupMember> members = groupserv.getMembers(idgroup);
         HttpApiServer.sendResponse(ctx.getExchange(), 200, groupWithMembersToJson(group, members));
     }
 
-    // تبدیل مدل به JSON //
+    // اینجا عضو اضافه میشه
+    private void doAddMember(RequestContext ctx, User user) throws IOException {
+        String idnewuser = getStr(ctx.getBody(), "userId");
+        String idgroup = getGroupId(ctx.getPath());
+        groupserv.addMember(idgroup, user.getId(), idnewuser);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Member added.\"}");
+    }
+
+    // اینجا نام و توضیحات گروه ویرایش میشه
+    private void doEditGroup(RequestContext ctx, User user) throws IOException {
+        String idgroup = getGroupId(ctx.getPath());
+        String newdescription = getStr(ctx.getBody(), "description");
+        String newname = getStr(ctx.getBody(), "name");
+        groupserv.editGroup(idgroup, user.getId(), newname, newdescription);
+        Optional<Group> found = groupserv.findById(idgroup);
+        if (found.isEmpty()) {
+            throw new IllegalArgumentException("Group not found.");
+        }
+        Group group = found.get();
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, groupToJson(group));
+    }
+
+    // اینجا کاربر گروه رو ترک میکنه
+    private void doLeaveGroup(RequestContext ctx, User user) throws IOException {
+        String idgroup = getGroupId(ctx.getPath());
+        groupserv.leaveGroup(idgroup, user.getId());
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Left the group.\"}");
+    }
+
+    // تبدیل به جیسون //
     private String groupToJson(Group group) {
         return "{\"id\":\"" + group.getId() + "\","
                 + "\"chatId\":\"" + group.getChatId() + "\","
@@ -87,33 +126,31 @@ public class GroupController implements HttpHandler {
     }
 
     private String groupWithMembersToJson(Group group, List<GroupMember> members) {
-        StringBuilder membersJson = new StringBuilder("[");
+        StringBuilder membersjson = new StringBuilder("[");
         for (int i = 0; i < members.size(); i++) {
             if (i > 0)
-                membersJson.append(",");
+                membersjson.append(",");
             GroupMember m = members.get(i);
-            membersJson.append("{\"userId\":\"" + m.getUserId() + "\","
+            membersjson.append("{\"userId\":\"" + m.getUserId() + "\","
                     + "\"role\":\"" + m.getRole() + "\"}");
         }
-        membersJson.append("]");
-
+        membersjson.append("]");
         return "{\"id\":\"" + group.getId() + "\","
                 + "\"chatId\":\"" + group.getChatId() + "\","
                 + "\"name\":\"" + escape(group.getName()) + "\","
                 + "\"description\":\"" + escape(group.getDescription()) + "\","
                 + "\"ownerId\":\"" + group.getOwnerId() + "\","
                 + "\"memberCount\":" + members.size() + ","
-                + "\"members\":" + membersJson + "}";
+                + "\"members\":" + membersjson + "}";
     }
 
-    // کمکی //
-    // استخراج groupId از مسیر
-    private String extractGroupId(String path) {
+    private String getGroupId(String path) {
         String[] parts = path.split("/");
         return parts.length >= 4 ? parts[3] : "";
     }
 
-    private String parseStr(String json, String key) {
+    // خواندن مقدار رشته‌ای از جیسون دستی
+    private String getStr(String json, String key) {
         String search = "\"" + key + "\":";
         int idx = json.indexOf(search);
         if (idx == -1)
@@ -128,6 +165,7 @@ public class GroupController implements HttpHandler {
         return end == -1 ? "" : json.substring(start, end);
     }
 
+    // فرار دادن کاراکترهای خاص
     private String escape(String s) {
         if (s == null)
             return "";

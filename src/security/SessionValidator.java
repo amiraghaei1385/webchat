@@ -1,54 +1,41 @@
 package security;
 
 import models.Session;
-
 import java.time.LocalDateTime;
 
-// اعتبارسنجی توکن‌های نشست (Session) که در درخواست‌های HTTP یا WebSocket ارسال می‌شوند
-// پیدا کردن Session بر اساس توکن بر عهده SessionRepository است
-// تا این کلاس فقط شامل منطق کسب‌وکار باشد
+// اعتبارسنجی توکن نشست که تو درخواست های  یا وب سوکت میاد
 public class SessionValidator {
+    static final int SESSION_durationhours = 24;
+    static final int REMEMBER_ME_durationdays= 30;
 
-    // مدت زمان اعتبار نشست عادی پس از ورود
-    private static final int SESSION_DURATION_HOURS = 24;
-
-    // مدت زمان اعتبار نشست در حالت مرا به خاطر بسپار
-    private static final int REMEMBER_ME_DURATION_DAYS = 30;
-
-    // جلوگیری از ساخت شیء از این کلاس؛ تمام متدها استاتیک هستند
+    // جلوگیری از ساخت شیء، 
     private SessionValidator() {
     }
-
-    // رابط عمومی کلاس
-
-    // بررسی می‌کند که آیا Session داده‌شده معتبر است یا خیر
+    // چک میکنه نشست داده شده معتبره یا نه
     public static boolean isValid(Session session) {
         if (session == null) {
             return false;
         }
-        return session.isValid(); // بررسی اعتبار به متد Session.isValid واگذار می‌شود
+        return session.isValid();
     }
 
-    // ایجاد یک Session جدید برای کاربر با یک توکن تازه
-    // معمولاً بلافاصله پس از ورود موفق کاربر فراخوانی می‌شود
-    public static Session createSession(String userId, boolean rememberMe) {
+    // یه نشست جدید با توکن تازه واسه کاربر میسازه
+    public static Session createSession(String idUser, boolean rememberMe) {
         String token = TokenGenerator.generateSessionToken();
-
-        LocalDateTime expiresAt = rememberMe
-                ? LocalDateTime.now().plusDays(REMEMBER_ME_DURATION_DAYS)
-                : LocalDateTime.now().plusHours(SESSION_DURATION_HOURS);
-
-        return new Session(token, userId, expiresAt);
+        LocalDateTime zamanEnghezaa = rememberMe
+                ? LocalDateTime.now().plusDays(REMEMBER_ME_durationdays)
+                : LocalDateTime.now().plusHours(SESSION_durationhours);
+        return new Session(token, idUser, zamanEnghezaa);
     }
 
-    // غیرفعال کردن Session
+    // غیرفعال کردن 
     public static void invalidate(Session session) {
         if (session != null) {
             session.setActive(false);
         }
     }
 
-    // دلیل نامعتبر بودن Session را به صورت متنی برمی‌گرداند
+    // دلیل نامعتبر بودن نشست رو به صورت متن برمیگردونه
     public static String diagnose(Session session) {
         if (session == null)
             return "session not found";

@@ -8,162 +8,166 @@ import repository.ChatRepository;
 import repository.GroupRepository;
 import repository.UserRepository;
 import utils.IdGenerator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-// مدیریت گروه‌ها و اعضای آن‌ها.
+// مدیریت گروه‌ها و اعضای آن‌ها
 public class GroupService {
 
-    private final GroupRepository groupRepository;
-    private final ChatRepository chatRepository;
-    private final UserRepository userRepository;
+    private final GroupRepository grouprepo;
+    private final ChatRepository chatrepo;
+    private final UserRepository userrepo;
 
     public GroupService(GroupRepository groupRepository,
             ChatRepository chatRepository,
             UserRepository userRepository) {
-        this.groupRepository = groupRepository;
-        this.chatRepository = chatRepository;
-        this.userRepository = userRepository;
+        this.grouprepo = groupRepository;
+        this.chatrepo = chatRepository;
+        this.userrepo = userRepository;
     }
 
-    // ایجاد گروه جدید.
-    // سازنده گروه به عنوان OWNER اضافه می‌شود.
+    // گروه ایحاد میشه
     public Group createGroup(String name, String ownerId) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Group name cannot be empty.");
         }
-
         Chat chat = new Chat(IdGenerator.generate(), ChatType.GROUP);
-        chat.addMember(ownerId);
-        chatRepository.save(chat);
-
         Group group = new Group(IdGenerator.generate(), chat.getId(), name, ownerId);
-        groupRepository.save(group);
-
+        chat.addMember(ownerId);
+        chatrepo.save(chat);
+        grouprepo.save(group);
         GroupMember owner = new GroupMember(group.getId(), ownerId, GroupMember.Role.OWNER);
-        groupRepository.saveMember(owner);
-
+        grouprepo.saveMember(owner);
         return group;
-    }
-
-    // دریافت گروه با آیدی.
-    public Optional<Group> findById(String groupId) {
-        return groupRepository.findById(groupId);
-    }
-
-    // دریافت گروه با آیدی چت مرتبط.
-    public Optional<Group> findByChatId(String chatId) {
-        return groupRepository.findByChatId(chatId);
     }
 
     // دریافت لیست اعضای یک گروه.
     public List<GroupMember> getMembers(String groupId) {
-        return groupRepository.findMembersByGroupId(groupId);
+        return grouprepo.findMembersByGroupId(groupId);
     }
 
-    // دریافت لیست تمام گروه‌ها (برای CLI ادمین).
+    // دریافت گروه با آیدی چت مرتبط.
+    public Optional<Group> findByChatId(String chatId) {
+        return grouprepo.findByChatId(chatId);
+    }
+
+    // دریافت لیست تمام گروه‌ها
     public List<Group> findAll() {
-        return groupRepository.findAll();
+        return grouprepo.findAll();
     }
 
-    // افزودن عضو جدید به گروه.
-    // فقط ادمین یا مالک گروه می‌تواند این کار را انجام دهد.
+    // دریافت گروه با آیدی.
+    public Optional<Group> findById(String groupId) {
+        return grouprepo.findById(groupId);
+    }
+
+    // اعضو جدید به گروه اضافه میشه
     public void addMember(String groupId, String requesterId, String newUserId) {
-        // بررسی وجود کاربر در سیستم
-        if (userRepository.findById(newUserId).isEmpty()) {
+        Optional<GroupMember> optrequester = grouprepo.findMember(groupId, requesterId);
+        if (userrepo.findById(newUserId).isEmpty()) {
             throw new IllegalArgumentException("User not found.");
         }
 
-        GroupMember requester = groupRepository.findMember(groupId, requesterId)
-                .orElseThrow(() -> new IllegalStateException("You are not a member of this group."));
-
+        if (optrequester.isEmpty()) {
+            throw new IllegalStateException("You are not a member of this group.");
+        }
+        GroupMember requester = optrequester.get();
         if (!requester.isAdmin()) {
             throw new IllegalStateException("Only admins can add members.");
         }
-
-        if (groupRepository.findMember(groupId, newUserId).isPresent()) {
+        if (grouprepo.findMember(groupId, newUserId).isPresent()) {
             throw new IllegalArgumentException("User is already a member.");
         }
-
-        GroupMember newMember = new GroupMember(groupId, newUserId, GroupMember.Role.MEMBER);
-        groupRepository.saveMember(newMember);
-
-        groupRepository.findById(groupId)
-                .ifPresent(group -> chatRepository.findById(group.getChatId()).ifPresent(chat -> {
-                    chat.addMember(newUserId);
-                    chatRepository.update(chat);
-                }));
+        GroupMember newmember = new GroupMember(groupId, newUserId, GroupMember.Role.MEMBER);
+        grouprepo.saveMember(newmember);
+        Optional<Group> optgroup = grouprepo.findById(groupId);
+        if (optgroup.isPresent()) {
+            Optional<Chat> optchat = chatrepo.findById(optgroup.get().getChatId());
+            if (optchat.isPresent()) {
+                Chat chat = optchat.get();
+                chat.addMember(newUserId);
+                chatrepo.update(chat);
+            }
+        }
     }
 
-    // حذف عضو از گروه.
-    // ادمین نمی‌تواند مالک یا ادمین دیگر را حذف کند.
-    public void removeMember(String groupId, String requesterId, String targetUserId) {
-        GroupMember requester = groupRepository.findMember(groupId, requesterId)
-                .orElseThrow(() -> new IllegalStateException("You are not a member of this group."));
+    // کاربر گروه رو ترک میکنه
+    public void leaveGroup(String groupId, String userId) {
+        Optional<GroupMember> optmember = grouprepo.findMember(groupId, userId);
+        if (optmember.isEmpty()) {
+            throw new IllegalStateException("You are not a member of this group.");
+        }
+        GroupMember member = optmember.get();
+        if (member.getRole() == GroupMember.Role.OWNER) {
+            throw new IllegalStateException("Owner cannot leave the group. Transfer ownership first.");
+        }
+        grouprepo.deleteMember(groupId, userId);
+        Optional<Group> optgroup = grouprepo.findById(groupId);
+        if (optgroup.isPresent()) {
+            Optional<Chat> optchat = chatrepo.findById(optgroup.get().getChatId());
+            if (optchat.isPresent()) {
+                Chat chat = optchat.get();
+                chat.removeMember(userId);
+                chatrepo.update(chat);
+            }
+        }
+    }
 
+    // حذف عضو از گروه
+    public void removeMember(String groupId, String requesterId, String targetUserId) {
+        Optional<GroupMember> optrequester = grouprepo.findMember(groupId, requesterId);
+        Optional<GroupMember> opttarget = grouprepo.findMember(groupId, targetUserId);
+        if (optrequester.isEmpty()) {
+            throw new IllegalStateException("You are not a member of this group.");
+        }
+        if (opttarget.isEmpty()) {
+            throw new IllegalArgumentException("Target user is not a member.");
+        }
+        GroupMember requester = optrequester.get();
         if (!requester.isAdmin()) {
             throw new IllegalStateException("Only admins can remove members.");
         }
-
-        GroupMember target = groupRepository.findMember(groupId, targetUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Target user is not a member."));
-
-        // مالک را نمی‌توان اخراج کرد
-        if (target.getRole() == GroupMember.Role.OWNER) {
-            throw new IllegalStateException("Cannot remove the group owner.");
-        }
-
-        // فقط مالک می‌تواند ادمین را اخراج کند
+        GroupMember target = opttarget.get();
+        // چک میکنه ببینه این کسی که کاربرو اخراج میکنه اونر هست
         if (target.getRole() == GroupMember.Role.ADMIN
                 && requester.getRole() != GroupMember.Role.OWNER) {
             throw new IllegalStateException("Only the owner can remove an admin.");
         }
-
-        groupRepository.deleteMember(groupId, targetUserId);
-
-        groupRepository.findById(groupId)
-                .ifPresent(group -> chatRepository.findById(group.getChatId()).ifPresent(chat -> {
-                    chat.removeMember(targetUserId);
-                    chatRepository.update(chat);
-                }));
-    }
-
-    // ترک گروه توسط کاربر.
-    public void leaveGroup(String groupId, String userId) {
-        GroupMember member = groupRepository.findMember(groupId, userId)
-                .orElseThrow(() -> new IllegalStateException("You are not a member of this group."));
-
-        if (member.getRole() == GroupMember.Role.OWNER) {
-            throw new IllegalStateException("Owner cannot leave the group. Transfer ownership first.");
+        // مالک را نمی‌تونیم اخراج کنیم
+        if (target.getRole() == GroupMember.Role.OWNER) {
+            throw new IllegalStateException("Cannot remove the group owner.");
         }
-
-        groupRepository.deleteMember(groupId, userId);
-
-        groupRepository.findById(groupId)
-                .ifPresent(group -> chatRepository.findById(group.getChatId()).ifPresent(chat -> {
-                    chat.removeMember(userId);
-                    chatRepository.update(chat);
-                }));
+        grouprepo.deleteMember(groupId, targetUserId);
+        Optional<Group> optgroup = grouprepo.findById(groupId);
+        if (optgroup.isPresent()) {
+            Optional<Chat> optchat = chatrepo.findById(optgroup.get().getChatId());
+            if (optchat.isPresent()) {
+                Chat chat = optchat.get();
+                chat.removeMember(targetUserId);
+                chatrepo.update(chat);
+            }
+        }
     }
 
-    // ویرایش نام و توضیحات گروه.
-    // فقط ادمین یا مالک گروه می‌تواند این کار را انجام دهد.
+    // ویرایش نام و توضیحات گروه
     public void editGroup(String groupId, String requesterId, String newName, String newDescription) {
-        GroupMember requester = groupRepository.findMember(groupId, requesterId)
-                .orElseThrow(() -> new IllegalStateException("You are not a member of this group."));
-
+        Optional<GroupMember> optrequester = grouprepo.findMember(groupId, requesterId);
+        if (optrequester.isEmpty()) {
+            throw new IllegalStateException("You are not a member of this group.");
+        }
+        GroupMember requester = optrequester.get();
         if (!requester.isAdmin()) {
             throw new IllegalStateException("Only admins can edit group info.");
         }
-
-        groupRepository.findById(groupId).ifPresent(group -> {
+        Optional<Group> optgroup = grouprepo.findById(groupId);
+        if (optgroup.isPresent()) {
+            Group group = optgroup.get();
             if (newName != null && !newName.isBlank()) {
                 group.setName(newName);
             }
             if (newDescription != null) {
                 group.setDescription(newDescription);
             }
-            groupRepository.update(group);
-        });
+            grouprepo.update(group);
+        }
     }
 }

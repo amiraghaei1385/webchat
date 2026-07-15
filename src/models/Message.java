@@ -2,35 +2,36 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Represents a single text message within a chat.
-// Message content is stored encrypted in the database.
-
+// مدل میسیج
 public class Message {
 
     private String id;
-    private String chatId;
-    private String senderId;
-    private String encryptedContent; // content stored encrypted (see MessageEncryptor)
-    private LocalDateTime sentAt;
-    private LocalDateTime editedAt; // null if never edited
-    private boolean isDeleted;
-    private String replyToMessageId; // null if not a reply
+    private String idchat;
+    private String idsender;
+    private String encryptedcontent;
+    private LocalDateTime sentat;
+    private LocalDateTime editedat;
+    private boolean isdeleted;
+    private String idreplytomessage;
+    private boolean hasmedia;
+    private String idmediamessage;
+    private String idforwardedfrommessage;
 
     public Message() {
     }
 
-    public Message(String id, String chatId, String senderId, String encryptedContent) {
+    public Message(String id, String idchat, String idsender, String encryptedcontent) {
         this.id = id;
-        this.chatId = chatId;
-        this.senderId = senderId;
-        this.encryptedContent = encryptedContent;
-        this.sentAt = LocalDateTime.now();
-        this.isDeleted = false;
+        this.idchat = idchat;
+        this.idsender = idsender;
+        this.encryptedcontent = encryptedcontent;
+        this.sentat = LocalDateTime.now();
+        this.isdeleted = false;
+        this.hasmedia = false;
     }
 
-    // Returns true if the message has been edited at least once.
     public boolean isEdited() {
-        return editedAt != null;
+        return editedat != null;
     }
 
     // Getters
@@ -39,31 +40,31 @@ public class Message {
     }
 
     public String getChatId() {
-        return chatId;
+        return idchat;
     }
 
     public String getSenderId() {
-        return senderId;
+        return idsender;
     }
 
     public String getEncryptedContent() {
-        return encryptedContent;
+        return encryptedcontent;
     }
 
     public LocalDateTime getSentAt() {
-        return sentAt;
+        return sentat;
     }
 
     public LocalDateTime getEditedAt() {
-        return editedAt;
+        return editedat;
     }
 
     public boolean isDeleted() {
-        return isDeleted;
+        return isdeleted;
     }
 
     public String getReplyToMessageId() {
-        return replyToMessageId;
+        return idreplytomessage;
     }
 
     // Setters
@@ -71,37 +72,61 @@ public class Message {
         this.id = id;
     }
 
-    public void setChatId(String chatId) {
-        this.chatId = chatId;
+    public void setChatId(String idchat) {
+        this.idchat = idchat;
     }
 
-    public void setSenderId(String senderId) {
-        this.senderId = senderId;
+    public void setSenderId(String idsender) {
+        this.idsender = idsender;
     }
 
     public void setEncryptedContent(String content) {
-        this.encryptedContent = content;
+        this.encryptedcontent = content;
     }
 
     public void setSentAt(LocalDateTime t) {
-        this.sentAt = t;
+        this.sentat = t;
     }
 
     public void setEditedAt(LocalDateTime t) {
-        this.editedAt = t;
+        this.editedat = t;
     }
 
     public void setDeleted(boolean deleted) {
-        this.isDeleted = deleted;
+        this.isdeleted = deleted;
     }
 
     public void setReplyToMessageId(String id) {
-        this.replyToMessageId = id;
+        this.idreplytomessage = id;
+    }
+
+    public boolean isHasMedia() {
+        return hasmedia;
+    }
+
+    public String getMediaMessageId() {
+        return idmediamessage;
+    }
+
+    public String getForwardedFromMessageId() {
+        return idforwardedfrommessage;
+    }
+
+    public void setHasMedia(boolean hasmedia) {
+        this.hasmedia = hasmedia;
+    }
+
+    public void setMediaMessageId(String idmediamessage) {
+        this.idmediamessage = idmediamessage;
+    }
+
+    public void setForwardedFromMessageId(String id) {
+        this.idforwardedfrommessage = id;
     }
 
     @Override
     public String toString() {
-        return "Message{id='" + id + "', chatId='" + chatId + "', senderId='" + senderId + "', isDeleted=" + isDeleted
+        return "Message{id='" + id + "', chatId='" + idchat + "', senderId='" + idsender + "', isDeleted=" + isdeleted
                 + "}";
     }
 }

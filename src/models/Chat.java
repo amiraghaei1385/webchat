@@ -2,31 +2,36 @@ package models;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-//Represents a chat conversation (private, group, or saved messages).
-
+// مدل چت
 public class Chat {
     private String id;
     private ChatType type;
-    private List<String> memberIds; // user IDs
-    private String lastMessageId; // ID of the most recent message
-    private LocalDateTime lastMessageAt;
-    private boolean isArchived;
-    private boolean isPinned;
-    private LocalDateTime createdAt;
+    private List<String> idmember; 
+    private String idlastmessage; 
+    private LocalDateTime lastmessageat;
+    private boolean isarchive;
+    private boolean ispin;
+    private String folderId;
+    private LocalDateTime createat;
+    private Map<String, LocalDateTime> lastreadat;
 
     public Chat() {
-        this.memberIds = new ArrayList<>();
+        this.idmember = new ArrayList<>();
+        this.lastreadat = new HashMap<>();
     }
 
     public Chat(String id, ChatType type) {
         this.id = id;
         this.type = type;
-        this.memberIds = new ArrayList<>();
-        this.isArchived = false;
-        this.isPinned = false;
-        this.createdAt = LocalDateTime.now();
+        this.idmember = new ArrayList<>();
+        this.isarchive = false;
+        this.ispin = false;
+        this.createat = LocalDateTime.now();
+        this.lastreadat = new HashMap<>();
     }
 
     // Getters
@@ -39,27 +44,27 @@ public class Chat {
     }
 
     public List<String> getMemberIds() {
-        return memberIds;
+        return idmember;
     }
 
     public String getLastMessageId() {
-        return lastMessageId;
+        return idlastmessage;
     }
 
     public LocalDateTime getLastMessageAt() {
-        return lastMessageAt;
+        return lastmessageat;
     }
 
     public boolean isArchived() {
-        return isArchived;
+        return isarchive;
     }
 
     public boolean isPinned() {
-        return isPinned;
+        return ispin;
     }
 
     public LocalDateTime getCreatedAt() {
-        return createdAt;
+        return createat;
     }
 
     // Setters
@@ -72,43 +77,68 @@ public class Chat {
     }
 
     public void setMemberIds(List<String> ids) {
-        this.memberIds = ids;
+        this.idmember = ids;
     }
 
     public void setLastMessageId(String id) {
-        this.lastMessageId = id;
+        this.idlastmessage = id;
     }
 
     public void setLastMessageAt(LocalDateTime t) {
-        this.lastMessageAt = t;
+        this.lastmessageat = t;
     }
 
     public void setArchived(boolean archived) {
-        this.isArchived = archived;
+        this.isarchive = archived;
     }
 
     public void setPinned(boolean pinned) {
-        this.isPinned = pinned;
+        this.ispin = pinned;
     }
 
     public void setCreatedAt(LocalDateTime t) {
-        this.createdAt = t;
+        this.createat = t;
     }
 
-    // Adds a member to the chat if not already present.
     public void addMember(String userId) {
-        if (!memberIds.contains(userId)) {
-            memberIds.add(userId);
+        if (!idmember.contains(userId)) {
+            idmember.add(userId);
         }
     }
 
-    // Removes a member from the chat.
     public void removeMember(String userId) {
-        memberIds.remove(userId);
+        idmember.remove(userId);
+    }
+
+    public String getFolderId() {
+        return folderId;
+    }
+
+    public void setFolderId(String folderId) {
+        this.folderId = folderId;
+    }
+
+    public Map<String, LocalDateTime> getLastReadAt() {
+        return lastreadat;
+    }
+
+    public void setLastReadAt(Map<String, LocalDateTime> lastReadAt) {
+        this.lastreadat = lastReadAt;
+    }
+
+    public void markReadBy(String userId) {
+        if (lastreadat == null) {
+            lastreadat = new HashMap<>();
+        }
+        lastreadat.put(userId, LocalDateTime.now());
+    }
+
+    public LocalDateTime getLastReadAt(String userId) {
+        return lastreadat == null ? null : lastreadat.get(userId);
     }
 
     @Override
     public String toString() {
-        return "Chat{id='" + id + "', type=" + type + ", members=" + memberIds.size() + "}";
+        return "Chat{id='" + id + "', type=" + type + ", members=" + idmember.size() + "}";
     }
 }

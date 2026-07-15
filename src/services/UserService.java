@@ -2,138 +2,211 @@ package services;
 
 import models.User;
 import repository.UserRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
-// مدیریت اطلاعات کاربران.
-
+// مدیریت اطلاعات کاربران
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepository userrepo;
+    private static final Pattern emailpatt = Pattern
+            .compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserService(UserRepository userrepo) {
+        this.userrepo = userrepo;
     }
 
-    // دریافت اطلاعات کاربر
-
-    // دریافت کاربر با آیدی.
-
-    public Optional<User> findById(String userId) {
-        return userRepository.findById(userId);
-    }
-
-    /**
-     * دریافت کاربر با نام کاربری.
-     * برای صفحه ایجاد گفتگو و جستجوی مخاطب استفاده می‌شود.
-     */
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
-    /**
-     * دریافت لیست تمام کاربران.
-     * برای CLI ادمین استفاده می‌شود.
-     */
+    // لیست تمام کاربران
     public List<User> findAll() {
-        return userRepository.findAll();
+        return userrepo.findAll();
     }
 
-    // وضعیت آنلاین
-
-    /**
-     * کاربر را آنلاین می‌کند.
-     * هنگام اتصال WebSocket فراخوانی می‌شود.
-     */
-    public void setOnline(String userId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setOnline(true);
-            userRepository.update(user);
-        });
+    // کاربر با نام کاربری
+    public Optional<User> findByUsername(String user) {
+        return userrepo.findByUsername(user);
     }
 
-    /**
-     * کاربر را آفلاین می‌کند و زمان آخرین حضور را ثبت می‌کند.
-     * هنگام قطع اتصال WebSocket فراخوانی می‌شود.
-     */
-    public void setOffline(String userId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setOnline(false);
-            user.setLastSeenAt(LocalDateTime.now());
-            userRepository.update(user);
-        });
+    // کاربر با آیدی
+    public Optional<User> findById(String iduser) {
+        return userrepo.findById(iduser);
     }
 
-    // ویرایش پروفایل (صفحه تنظیمات)
-
-    /**
-     * تغییر نام نمایشی کاربر.
-     */
-    public User updateUsername(String userId, String newUsername) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
-        if (newUsername == null || newUsername.isBlank()) {
-            throw new IllegalArgumentException("Username cannot be empty.");
+    // کاربر آنلاین میشه
+    public void setOnline(String iduser) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            return;
         }
-
-        user.setUsername(newUsername);
-        userRepository.update(user);
-        return user;
+        User user = optuser.get();
+        user.setOnline(true);
+        userrepo.update(user);
     }
 
-    /**
-     * تغییر آیدی منحصربه‌فرد کاربر.
-     * بررسی می‌شود که آیدی جدید قبلاً توسط کاربر دیگری استفاده نشده باشد.
-     */
-    public User updateUserId(String currentUserId, String newUserId) {
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
-        if (newUserId == null || newUserId.isBlank()) {
-            throw new IllegalArgumentException("User ID cannot be empty.");
+    // کاربر آفلاین میشه
+    public void setOffline(String iduser) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            return;
         }
-        if (!newUserId.equals(currentUserId) && userRepository.findById(newUserId).isPresent()) {
+        User user = optuser.get();
+        user.setOnline(false);
+        user.setLastSeenAt(LocalDateTime.now());
+        userrepo.update(user);
+    }
+
+    // تغییر آیدی کاربر
+    public User updateUserId(String idcurrentuser, String newuser) {
+        Optional<User> optuser = userrepo.findById(idcurrentuser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        if (!newuser.equals(idcurrentuser) && userrepo.findById(newuser).isPresent()) {
             throw new IllegalArgumentException("User ID already taken.");
         }
-
-        user.setId(newUserId);
-        userRepository.update(user);
+        if (newuser == null || newuser.isBlank()) {
+            throw new IllegalArgumentException("User ID cannot be empty.");
+        }
+        user.setId(newuser);
+        userrepo.update(user);
         return user;
     }
 
-    /**
-     * تنظیم یا تغییر عکس پروفایل کاربر.
-     * مسیر فایل رسانه (که قبلاً در پوشه storage/media ذخیره شده) دریافت می‌شود.
-     */
-    public User updateProfilePicture(String userId, String picturePath) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
-        user.setProfilePicPath(picturePath);
-        userRepository.update(user);
+    // تغییر عکس پروفایل
+    public User updateProfilePicture(String iduser, String picturepath) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        user.setProfilePicPath(picturepath);
+        userrepo.update(user);
         return user;
     }
 
-    /**
-     * حذف عکس پروفایل کاربر.
-     */
-    public User removeProfilePicture(String userId) {
-        return updateProfilePicture(userId, null);
+    // تغییر نام نمایشی
+    public User updateUsername(String iduser, String newuser) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        if (newuser == null || newuser.isBlank()) {
+            throw new IllegalArgumentException("Username cannot be empty.");
+        }
+        user.setUsername(newuser);
+        userrepo.update(user);
+        return user;
     }
 
-    /**
-     * حذف حساب کاربری (soft delete).
-     * داده‌های کاربر پاک نمی‌شوند، فقط به عنوان حذف‌شده علامت‌گذاری می‌شوند
-     * تا تاریخچه پیام‌های دیگران (مثلاً در گروه‌ها) دچار خطا نشود.
-     */
-    public void deleteAccount(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+    // تغییر عکس پس‌زمینه
+    public User updateBackgroundPicture(String iduser, String picturepath) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        user.setBackgroundPicPath(picturepath);
+        userrepo.update(user);
+        return user;
+    }
 
+    // حذف عکس پروفایل
+    public User removeProfilePicture(String iduser) {
+        return updateProfilePicture(iduser, null);
+    }
+
+    // حذف حساب کاربری
+    public void deleteAccount(String iduser) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
         user.setDeleted(true);
         user.setOnline(false);
-        userRepository.update(user);
+        userrepo.update(user);
+    }
+
+    // حذف عکس پس‌زمینه
+    public User removeBackgroundPicture(String iduser) {
+        return updateBackgroundPicture(iduser, null);
+    }
+
+    // تغییر ایمیل کاربر
+    public User updateEmail(String iduser, String newemail) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        if (newemail == null || newemail.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be empty.");
+        }
+        String trimmedEmail = newemail.trim();
+        if (!emailpatt.matcher(trimmedEmail).matches()) {
+            throw new IllegalArgumentException("Invalid email format.");
+        }
+        // بررسی تکراری نبودن ایمیل
+        for (User other : userrepo.findAll()) {
+            if (!other.getId().equals(iduser) && trimmedEmail.equalsIgnoreCase(other.getEmail())) {
+                throw new IllegalArgumentException("Email already in use.");
+            }
+        }
+        user.setEmail(trimmedEmail);
+        userrepo.update(user);
+        return user;
+    }
+
+    // حذف تاریخ تولد
+    public User removeBirthDate(String iduser) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        user.setBirthDate(null);
+        userrepo.update(user);
+        return user;
+    }
+
+    // حذف ایمیل کاربر
+    public User removeEmail(String iduser) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        user.setEmail(null);
+        userrepo.update(user);
+        return user;
+    }
+
+    // تغییر تاریخ تولد
+    public User updateBirthDate(String iduser, String newbirthdate) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        if (newbirthdate == null || newbirthdate.isBlank()) {
+            throw new IllegalArgumentException("Birth date cannot be empty.");
+        }
+        LocalDate parsedate;
+        try {
+            parsedate = LocalDate.parse(newbirthdate.trim());
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid birth date format. Use yyyy-MM-dd.");
+        }
+        if (parsedate.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Birth date cannot be in the future.");
+        }
+        user.setBirthDate(parsedate);
+        userrepo.update(user);
+        return user;
     }
 }

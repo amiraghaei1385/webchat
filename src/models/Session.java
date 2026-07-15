@@ -2,77 +2,75 @@ package models;
 
 import java.time.LocalDateTime;
 
-// Represents an active login session for a user.
-// Used for "Remember Me" functionality and session validation.
-
+// مدل نشست
 public class Session {
 
-    private String sessionToken; // unique random token
-    private String userId; // owner of this session
-    private LocalDateTime createdAt;
-    private LocalDateTime expiresAt;
-    private boolean isActive;
+    private String sessiontoken;
+    private String iduser;
+    private LocalDateTime createat;
+    private LocalDateTime expiresat;
+    private boolean isactive;
 
     public Session() {
     }
 
-    public Session(String sessionToken, String userId, LocalDateTime expiresAt) {
-        this.sessionToken = sessionToken;
-        this.userId = userId;
-        this.createdAt = LocalDateTime.now();
-        this.expiresAt = expiresAt;
-        this.isActive = true;
+    public Session(String sessiontoken, String iduser, LocalDateTime expiresat) {
+        this.sessiontoken = sessiontoken;
+        this.iduser = iduser;
+        this.createat = LocalDateTime.now();
+        this.expiresat = expiresat;
+        this.isactive = true;
     }
 
-    // Returns true if the session is still valid (not expired and active).
+    //بررسی فعال بودن نشست
     public boolean isValid() {
-        return isActive && LocalDateTime.now().isBefore(expiresAt);
+        return isactive && LocalDateTime.now().isBefore(expiresat);
     }
 
     // Getters
     public String getSessionToken() {
-        return sessionToken;
+        return sessiontoken;
     }
 
     public String getUserId() {
-        return userId;
+        return iduser;
     }
 
     public LocalDateTime getCreatedAt() {
-        return createdAt;
+        return createat;
     }
 
     public LocalDateTime getExpiresAt() {
-        return expiresAt;
+        return expiresat;
     }
 
     public boolean isActive() {
-        return isActive;
+        return isactive;
     }
 
     // Setters
     public void setSessionToken(String token) {
-        this.sessionToken = token;
+        this.sessiontoken = token;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserId(String iduser) {
+        this.iduser = iduser;
     }
 
     public void setCreatedAt(LocalDateTime t) {
-        this.createdAt = t;
+        this.createat = t;
     }
 
     public void setExpiresAt(LocalDateTime t) {
-        this.expiresAt = t;
+        this.expiresat = t;
     }
 
     public void setActive(boolean active) {
-        this.isActive = active;
+        this.isactive = active;
     }
 
     @Override
     public String toString() {
-        return "Session{userId='" + userId + "', expiresAt=" + expiresAt + ", isActive=" + isActive + "}";
+        return "Session{userId='" + iduser + "', expiresAt=" + expiresat + ", isActive=" + isactive + "}";
     }
 }

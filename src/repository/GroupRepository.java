@@ -5,7 +5,6 @@ import models.GroupMember;
 import java.util.List;
 import java.util.Optional;
 
-// قرارداد مربوط به تمام عملیات ذخیره‌سازی و بازیابی گروه‌ها و اعضای گروه
 public interface GroupRepository {
 
     void save(Group group);

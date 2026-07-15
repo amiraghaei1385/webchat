@@ -4,7 +4,7 @@ import models.User;
 import services.AuthService;
 import java.util.Optional;
 
-// اعتبارسنجی session در هر درخواست
+// اعتبارسنجی در هر درخواست
 public class SessionManager {
 
     private final AuthService authService;
@@ -13,7 +13,7 @@ public class SessionManager {
         this.authService = authService;
     }
 
-    // بررسی می‌کند که آیا توکن session معتبر است
+    // بررسی می‌کنه که آیا توکن معتبر است
     public Optional<User> validate(String sessionToken) {
         if (sessionToken == null || sessionToken.isBlank()) {
             return Optional.empty();
@@ -21,7 +21,7 @@ public class SessionManager {
         return authService.validateSession(sessionToken);
     }
 
-    // بررسی می‌کند که آیا کاربر لاگین است
+    // بررسی میکنه ایا کاربر لاگین هست یا نه
     public boolean isAuthenticated(String sessionToken) {
         return validate(sessionToken).isPresent();
     }

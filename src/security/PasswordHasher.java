@@ -5,90 +5,76 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-//هش کردن رمز عبور و بررسی صحت ان با استفاده از الگوریتم SHA-256 و salt
-//فرمت ذخیره سازی در پایگاه داده به این شکله  SALT:HASH
-// salt به مقدار تصادفیbase64 تبدیل شده
-// HASH نتیجه SHA-256 روی salt + password است که آن هم به Base64 تبدیل شده است.
-
+// هش کردن رمز عبور با الگوریتم و سالت
 public class PasswordHasher {
 
-    private static final String ALGORITHM = "SHA-256";
-    private static final int SALT_BYTES = 16;
-    private static final String SEPARATOR = ":";
+    static final String algo = "SHA-256";
+    static final int saltbyte = 16;
+    static final String seprator = ":";
 
-    // Public API
-
-    // رمز عبور خام را هش کرده و رشته‌ای مناسب برای ذخیره در پایگاه داده برمی‌گرداند
-    public static String hash(String plainPassword) {
-        if (plainPassword == null || plainPassword.isEmpty()) {
+    // رمز عبور خام رو هش میکنه و برمیگردونه
+    public static String hash(String pass) {
+        if (pass == null || pass.isEmpty()) {
             throw new IllegalArgumentException("Password must not be null or empty.");
         }
-
-        byte[] salt = generateSalt();
-        byte[] hashBytes = computeHash(salt, plainPassword);
-
-        String saltBase64 = Base64.getEncoder().encodeToString(salt);
-        String hashBase64 = Base64.getEncoder().encodeToString(hashBytes);
-
-        return saltBase64 + SEPARATOR + hashBase64;
+        byte[] salt = saltBesaz();
+        byte[] hashBytes = hashBesaz(salt, pass);
+        String hashBase = Base64.getEncoder().encodeToString(hashBytes);
+        String saltBas = Base64.getEncoder().encodeToString(salt);
+        return saltBas + seprator + hashBase;
     }
 
-    // بررسی می‌کند که آیا رمز واردشده با مقدار ذخیره‌شده مطابقت دارد یا خیر
-    public static boolean verify(String plainPassword, String storedHash) {
-        if (plainPassword == null || storedHash == null) {
+    // چک میکنه رمز واردشده با هش ذخیره شده یکی هست یا نه
+    public static boolean verify(String pass, String hashDakhereh) {
+        if (pass == null || hashDakhereh == null) {
             return false;
         }
-
-        String[] parts = storedHash.split(SEPARATOR, 2);
+        String[] parts = hashDakhereh.split(seprator, 2);
         if (parts.length != 2) {
-            return false; // فرمت مقدار ذخیره‌شده نامعتبر است
+            return false; 
         }
-
+        byte[] hashDorost;
         byte[] salt;
-        byte[] expectedHash;
         try {
             salt = Base64.getDecoder().decode(parts[0]);
-            expectedHash = Base64.getDecoder().decode(parts[1]);
+            hashDorost = Base64.getDecoder().decode(parts[1]);
         } catch (IllegalArgumentException e) {
-            return false; // تبدیل Base64 با خطا مواجه شد
+            return false;
         }
-
-        byte[] actualHash = computeHash(salt, plainPassword);
-        return slowEquals(expectedHash, actualHash);
+        byte[] hashFeli = hashBesaz(salt, pass);
+        return moghayeseAmn(hashDorost, hashFeli);
     }
 
-    // متدهای کمکی خصوصی
-    // تولید یک Salt تصادفی با امنیت رمزنگاری
-    private static byte[] generateSalt() {
-        byte[] salt = new byte[SALT_BYTES];
+    // یه سالت تصادفی میسازه
+    static byte[] saltBesaz() {
+        byte[] salt = new byte[saltbyte];
         new SecureRandom().nextBytes(salt);
         return salt;
     }
 
-    // هش SHA-256 را روی ترکیب Salt و رمز عبور محاسبه می‌کند
-    private static byte[] computeHash(byte[] salt, String plainPassword) {
+    // مقایسه دو آرایه بایت با زمان ثابت
+    // برای جلوگیری از حمله تایمینگ
+    static boolean moghayeseAmn(byte[] a, byte[] b) {
+        if (a.length != b.length) {
+            return false;
+        }
+        int farg = 0;
+        for (int i = 0; i < a.length; i++) {
+            farg |= a[i] ^ b[i];
+        }
+        return farg == 0;
+    }
+
+    // هش رو روی سالت و رمز عبور حساب میکنه
+    static byte[] hashBesaz(byte[] salt, String password) {
         try {
-            MessageDigest digest = MessageDigest.getInstance(ALGORITHM);
+            MessageDigest digest = MessageDigest.getInstance(algo);
             digest.update(salt);
-            digest.update(plainPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            digest.update(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return digest.digest();
         } catch (NoSuchAlgorithmException e) {
-            // SHA-256 is guaranteed to exist in every Java SE implementation
             throw new RuntimeException("SHA-256 algorithm not available.", e);
         }
     }
 
-    // مقایسه آرایه‌های بایتی با زمان اجرای ثابت
-    // برای جلوگیری از حملات Timing Attack
-    // همواره تمام طول هر دو آرایه بررسی می‌شود
-    private static boolean slowEquals(byte[] a, byte[] b) {
-        if (a.length != b.length) {
-            return false;
-        }
-        int diff = 0;
-        for (int i = 0; i < a.length; i++) {
-            diff |= a[i] ^ b[i];
-        }
-        return diff == 0;
-    }
 }

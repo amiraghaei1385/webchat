@@ -7,32 +7,40 @@ import server.HttpApiServer;
 import server.RequestContext;
 import server.SessionManager;
 import services.AuthService;
+import services.PasswordResetService;
 import java.io.IOException;
 
-// مدیریت ثبت‌نام، ورود و خروج کاربران
+// کنترلر ورود ثبت‌نام و بازیابی رمز
 public class AuthController implements HttpHandler {
 
-    private final AuthService authService;
-    private final SessionManager sessionManager;
+    private final AuthService authserv;
+    private final SessionManager sessionmanager;
+    private final PasswordResetService passresetserv;
 
-    public AuthController(AuthService authService, SessionManager sessionManager) {
-        this.authService = authService;
-        this.sessionManager = sessionManager;
+    public AuthController(AuthService authService, SessionManager sessionManager,
+            PasswordResetService passwordResetService) {
+        this.authserv = authService;
+        this.sessionmanager = sessionManager;
+        this.passresetserv = passwordResetService;
     }
 
-    @Override
+    // ورودی اصلی درخواست‌ها
     public void handle(HttpExchange exchange) throws IOException {
         RequestContext ctx = new RequestContext(exchange);
         String path = ctx.getPath();
         String method = ctx.getMethod();
 
         try {
-            if ("POST".equals(method) && "/api/auth/login".equals(path)) {
-                handleLogin(ctx);
-            } else if ("POST".equals(method) && "/api/auth/register".equals(path)) {
-                handleRegister(ctx);
-            } else if ("POST".equals(method) && "/api/auth/logout".equals(path)) {
-                handleLogout(ctx);
+            if (method.equals("POST") && path.equals("/api/auth/login")) {
+                doLogin(ctx);
+            } else if (method.equals("POST") && path.equals("/api/auth/register")) {
+                doRegister(ctx);
+            } else if (method.equals("POST") && path.equals("/api/auth/logout")) {
+                doLogout(ctx);
+            } else if (method.equals("POST") && path.equals("/api/auth/forgot-password")) {
+                doForgotPassword(ctx);
+            } else if (method.equals("POST") && path.equals("/api/auth/reset-password")) {
+                doResetPassword(ctx);
             } else {
                 HttpApiServer.sendResponse(exchange, 404, "{\"error\":\"Not found.\"}");
             }
@@ -45,49 +53,65 @@ public class AuthController implements HttpHandler {
         }
     }
 
-    // ورود //
-    private void handleLogin(RequestContext ctx) throws IOException {
+    // اینجا ثبت‌نام کاربر جدید انجام میشه
+    private void doRegister(RequestContext ctx) throws IOException {
         String body = ctx.getBody();
-        String username = parseStr(body, "username");
-        String password = parseStr(body, "password");
-        boolean rememberMe = parseBool(body, "rememberMe");
-
-        Session session = authService.login(username, password, rememberMe);
-
-        String response = "{\"token\":\"" + session.getSessionToken() + "\","
+        String iduser = getStr(body, "userId");
+        String user = getStr(body, "username");
+        String pass = getStr(body, "password");
+        String confirmpass = getStr(body, "confirmPassword");
+        Session session = authserv.register(iduser, user, pass, confirmpass);
+        String res = "{\"token\":\"" + session.getSessionToken() + "\","
                 + "\"userId\":\"" + session.getUserId() + "\"}";
-        HttpApiServer.sendResponse(ctx.getExchange(), 200, response);
+        HttpApiServer.sendResponse(ctx.getExchange(), 201, res);
     }
 
-    // ثبت‌نام //
-    private void handleRegister(RequestContext ctx) throws IOException {
+    // اینجا ورود کاربر انجام میشه
+    private void doLogin(RequestContext ctx) throws IOException {
         String body = ctx.getBody();
-        String userId = parseStr(body, "userId");
-        String username = parseStr(body, "username");
-        String password = parseStr(body, "password");
-        String confirmPassword = parseStr(body, "confirmPassword");
-
-        Session session = authService.register(userId, username, password, confirmPassword);
-
-        String response = "{\"token\":\"" + session.getSessionToken() + "\","
+        String user = getStr(body, "username");
+        String pass = getStr(body, "password");
+        boolean rememberme = getBool(body, "rememberMe");
+        Session session = authserv.login(user, pass, rememberme);
+        String res = "{\"token\":\"" + session.getSessionToken() + "\","
                 + "\"userId\":\"" + session.getUserId() + "\"}";
-        HttpApiServer.sendResponse(ctx.getExchange(), 201, response);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, res);
     }
 
-    // خروج //
-    private void handleLogout(RequestContext ctx) throws IOException {
-        if (sessionManager.validate(ctx.getSessionToken()).isEmpty()) {
+    // اینجا خروج کاربر انجام میشه
+    private void doLogout(RequestContext ctx) throws IOException {
+        if (sessionmanager.validate(ctx.getSessionToken()).isEmpty()) {
             HttpApiServer.sendResponse(ctx.getExchange(), 401, "{\"error\":\"Unauthorized.\"}");
             return;
         }
-
-        authService.logout(ctx.getSessionToken());
+        authserv.logout(ctx.getSessionToken());
         HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Logged out.\"}");
     }
 
-    // کمکی //
-    // استخراج مقدار string از JSON بدون کتابخانه خارجی
-    private String parseStr(String json, String key) {
+    // تایید نهایی و تنظیم رمز جدید
+    private void doResetPassword(RequestContext ctx) throws IOException {
+        String body = ctx.getBody();
+        String token = getStr(body, "token");
+        String temppass = getStr(body, "tempPassword");
+        String newpass = getStr(body, "newPassword");
+        String newPassconfirm = getStr(body, "confirmNewPassword");
+        passresetserv.confirmReset(token, temppass, newpass, newPassconfirm);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200,
+                "{\"message\":\"Password has been reset successfully.\"}");
+    }
+
+    // درخواست بازیابی رمز، توکن و رمز موقت مستقیم برمیگرده چون ایمیل نداریم
+    private void doForgotPassword(RequestContext ctx) throws IOException {
+        String body = ctx.getBody();
+        String user = getStr(body, "username");
+        PasswordResetService.ResetRequestResult res = passresetserv.requestReset(user);
+        String response = "{\"token\":\"" + res.getToken() + "\","
+                + "\"tempPassword\":\"" + escape(res.getTempPassword()) + "\"}";
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, response);
+    }
+
+    // خواندن مقدار رشته‌ای از جیسون دستی
+    private String getStr(String json, String key) {
         String search = "\"" + key + "\":";
         int idx = json.indexOf(search);
         if (idx == -1)
@@ -102,8 +126,8 @@ public class AuthController implements HttpHandler {
         return end == -1 ? "" : json.substring(start, end);
     }
 
-    // استخراج مقدار boolean از JSON
-    private boolean parseBool(String json, String key) {
+    // خواندن مقدار بولین از جیسون
+    private boolean getBool(String json, String key) {
         String search = "\"" + key + "\":";
         int idx = json.indexOf(search);
         if (idx == -1)
@@ -112,5 +136,12 @@ public class AuthController implements HttpHandler {
         while (vs < json.length() && json.charAt(vs) == ' ')
             vs++;
         return json.startsWith("true", vs);
+    }
+
+    // فرار دادن کاراکترهای خاص
+    private String escape(String s) {
+        if (s == null)
+            return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

@@ -1,65 +1,55 @@
 package security;
 
 import java.time.Instant;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-// محدودکننده نرخ ارسال پیام در حافظه
-// نحوه عملکرد (پنجره لغزان):
-// برای هر کاربر صف کوچکی از زمان‌های ارسال پیام نگهداری می‌شود.
-// قبل از ثبت پیام جدید، زمان‌های خارج از بازه حذف می‌شوند.
-// اگر تعداد پیام‌های باقی‌مانده به حد مجاز رسیده باشد، ارسال رد می‌شود
+// محدود کننده تعداد پیام هر کاربر تو یه بازه زمانی
 public class RateLimiter {
 
-    // حداکثر تعداد پیام مجاز در بازه زمانی مشخص
-    private static final int MAX_MESSAGES = 5;
-    // مدت زمان پنجره لغزان بر حسب میلی‌ثانیه (1 ثانیه)
-    private static final long WINDOW_MS = 1_000L;
+    static final int MAX_message = 5;
+    static final long MS_window = 1_000L;
+    final Map<String, Deque<Long>> timeuser = new ConcurrentHashMap<>();
 
-    // صف زمان‌های ارسال برای هر کاربر (بر حسب میلی‌ثانیه)
-    // ConcurrentHashMap امکان دسترسی همزمان چند نخ را فراهم می‌کند
-    private final Map<String, Deque<Long>> userTimestamps = new ConcurrentHashMap<>();
-
-    // بررسی می‌کند که آیا کاربر در این لحظه مجاز به ارسال پیام هست یا خیر
-    // در صورت مجاز بودن، زمان فعلی ثبت می‌شود تا در دفعات بعد محاسبه شود
-    public boolean allowSend(String userId) {
-        long now = Instant.now().toEpochMilli();
-
-        Deque<Long> timestamps = userTimestamps.computeIfAbsent(userId, k -> new ArrayDeque<>());
-
-        synchronized (timestamps) {
-            while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
-                timestamps.pollFirst();
+    // چک میکنه کاربر الان اجازه ارسال پیام داره یا نه
+    // اگه اجازه داشت زمان فعلی ثبت میشه
+    public boolean allowSend(String idUser) {
+        long alan = Instant.now().toEpochMilli();
+        Deque<Long> times = timeuser.get(idUser);
+        if (times == null) {
+            times = new ArrayDeque<>();
+            timeuser.put(idUser, times);
+        }
+        synchronized (times) {
+            while (!times.isEmpty() && (alan - times.peekFirst()) >= MS_window) {
+                times.pollFirst();
             }
 
-            if (timestamps.size() >= MAX_MESSAGES) {
+            if (times.size() >= MAX_message) {
                 return false;
             }
-
-            timestamps.addLast(now);
+            times.addLast(alan);
             return true;
         }
     }
 
-    // تعداد پیام‌های ارسال‌شده توسط کاربر در بازه فعلی را برمی‌گرداند
-    public int currentCount(String userId) {
-        long now = Instant.now().toEpochMilli();
-        Deque<Long> timestamps = userTimestamps.get(userId);
-        if (timestamps == null) return 0;
-
-        synchronized (timestamps) {
-            while (!timestamps.isEmpty() && (now - timestamps.peekFirst()) >= WINDOW_MS) {
-                timestamps.pollFirst();
-            }
-            return timestamps.size();
-        }
+    // اطلاعات کاربر رو پاک میکنه
+    public void clear(String idUser) {
+        timeuser.remove(idUser);
     }
 
-    // اطلاعات ثبت‌شده برای کاربر را حذف می‌کند
-    // معمولاً هنگام خروج کاربر از سیستم استفاده می‌شود
-    public void clear(String userId) {
-        userTimestamps.remove(userId);
+    // تعداد پیام های کاربر تو بازه فعلی رو برمیگردونه
+    public int currentCount(String idUser) {
+        long alan = Instant.now().toEpochMilli();
+        Deque<Long> times = timeuser.get(idUser);
+        if (times == null)
+            return 0;
+
+        synchronized (times) {
+            while (!times.isEmpty() && (alan - times.peekFirst()) >= MS_window) {
+                times.pollFirst();
+            }
+            return times.size();
+        }
     }
 }

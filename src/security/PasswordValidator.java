@@ -4,98 +4,75 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-//  بررسی می‌کند که آیا رمز عبور پیشنهادی تمام قوانین پروژه را رعایت می‌کند یا خیر
-
+// چک میکنه رمز عبور پیشنهادی قوانین پروژه رو رعایت میکنه یا نه
 public class PasswordValidator {
 
-    // الگوهای Regex (برای استفاده مجدد یک بار کامپایل می‌شوند)
-    private static final int MIN_LENGTH = 8;
-    private static final Pattern HAS_UPPERCASE = Pattern.compile("[A-Z]");
-    private static final Pattern HAS_LOWERCASE = Pattern.compile("[a-z]");
-    private static final Pattern HAS_DIGIT = Pattern.compile("[0-9]");
-    // کاراکترهای ویژه مطابق با مستندات پروژه
-    private static final Pattern HAS_SPECIAL = Pattern.compile("[!@#$%^&*]");
+    static final int minlenghth = 8;
+    static final Pattern HAS_uppercase = Pattern.compile("[A-Z]");
+    static final Pattern HAS_lowercase = Pattern.compile("[a-z]");
+    static final Pattern HAS_digit = Pattern.compile("[0-9]");
+    static final Pattern HAS_special = Pattern.compile("[!@#$%^&*]");
 
-    // Public API
-
-    // رمز عبور را بر اساس تمام قوانین اعتبارسنجی بررسی می‌کند
-    public static ValidationResult validate(String plainPassword, String username) {
-        List<String> errors = new ArrayList<>();
-
-        if (plainPassword == null || plainPassword.isEmpty()) {
-            errors.add("Password must not be empty.");
-            return new ValidationResult(errors); // ادامه بررسی فایده‌ای ندارد
+    // رمز عبور رو با تمام قوانین چک میکنه
+    public static ValidationResult validate(String pass, String user) {
+        List<String> khataha = new ArrayList<>();
+        if (pass == null || pass.isEmpty()) {
+            khataha.add("Password must not be empty.");
+            return new ValidationResult(khataha);
         }
-
-        // قانون ۱: حداقل طول رمز عبور
-        if (plainPassword.length() < MIN_LENGTH) {
-            errors.add("Password must be at least " + MIN_LENGTH + " characters long.");
+        if (!HAS_lowercase.matcher(pass).find()) {
+            khataha.add("Password must contain at least one lowercase letter (a-z).");
         }
-
-        // قانون ۲: وجود حداقل یک حرف بزرگ
-        if (!HAS_UPPERCASE.matcher(plainPassword).find()) {
-            errors.add("Password must contain at least one uppercase letter (A-Z).");
+        if (pass.length() < minlenghth) {
+            khataha.add("Password must be at least " + minlenghth + " characters long.");
         }
-
-        // قانون ۳: وجود حداقل یک حرف کوچک
-        if (!HAS_LOWERCASE.matcher(plainPassword).find()) {
-            errors.add("Password must contain at least one lowercase letter (a-z).");
+        if (!HAS_special.matcher(pass).find()) {
+            khataha.add("Password must contain at least one special character: ! @ # $ % ^ & *");
         }
-
-        // قانون ۴: وجود حداقل یک رقم
-        if (!HAS_DIGIT.matcher(plainPassword).find()) {
-            errors.add("Password must contain at least one digit (0-9).");
+        if (!HAS_digit.matcher(pass).find()) {
+            khataha.add("Password must contain at least one digit (0-9).");
         }
-
-        // قانون ۵: وجود حداقل یک کاراکتر ویژه
-        if (!HAS_SPECIAL.matcher(plainPassword).find()) {
-            errors.add("Password must contain at least one special character: ! @ # $ % ^ & *");
-        }
-
-        // قانون ۶: رمز عبور نباید شامل نام کاربری باشد (بدون حساسیت به بزرگی و کوچکی
-        // حروف)
-        if (username != null && !username.isEmpty()) {
-            if (plainPassword.toLowerCase().contains(username.toLowerCase())) {
-                errors.add("Password must not contain the username.");
+        if (user != null && !user.isEmpty()) {
+            if (pass.toLowerCase().contains(user.toLowerCase())) {
+                khataha.add("Password must not contain the username.");
             }
         }
-
-        return new ValidationResult(errors);
+        if (!HAS_uppercase.matcher(pass).find()) {
+            khataha.add("Password must contain at least one uppercase letter (A-Z).");
+        }
+        return new ValidationResult(khataha);
     }
 
-    // نسخه ساده‌تر اعتبارسنجی که بررسی نام کاربری را انجام نمی‌دهد
-    public static ValidationResult validate(String plainPassword) {
-        return validate(plainPassword, null);
+    // نسخه ساده که نام کاربری رو چک نمیکنه
+    public static ValidationResult validate(String password) {
+        return validate(password, null);
     }
 
-    // کلاس داخلی نگهدارنده نتیجه اعتبارسنجی
+    // کلاس نگهدارنده نتیجه اعتبارسنجی
     public static class ValidationResult {
+        final List<String> khataha;
 
-        private final List<String> errors;
-
-        private ValidationResult(List<String> errors) {
-            this.errors = errors;
+        ValidationResult(List<String> khataha) {
+            this.khataha = khataha;
         }
 
-        // اگر تمام قوانین رعایت شده باشند مقدار true برمی‌گرداند
         public boolean isValid() {
-            return errors.isEmpty();
+            return khataha.isEmpty();
         }
 
-        // لیست خطاهای اعتبارسنجی را برمی‌گرداند
+        // لیست خطا ها رو برمیگردونه
         public List<String> getErrors() {
-            return errors;
+            return khataha;
         }
 
-        // تمام خطاها را در یک رشته و با جداکننده خط جدید برمی‌گرداند.
-
+        // همه خطا ها رو با خط جدید تو یه رشته برمیگردونه
         public String getErrorsSummary() {
-            return String.join("\n", errors);
+            return String.join("\n", khataha);
         }
 
         @Override
         public String toString() {
-            return isValid() ? "ValidationResult{VALID}" : "ValidationResult{INVALID: " + errors + "}";
+            return isValid() ? "ValidationResult{VALID}" : "ValidationResult{INVALID: " + khataha + "}";
         }
     }
 }
