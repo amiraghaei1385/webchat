@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="newChat.title">گفتگوی جدید</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/animations.css">
+<link rel="stylesheet" href="../css/new-chat.css">
+</head>
+<body class="newchat-page">
+
+  <div class="newchat-shell">
+
+    <div class="newchat-header">
+      <button class="chat-back-btn" id="backBtn"><span class="back-arrow-icon">→</span></button>
+      <h1 data-i18n="newChat.title">New Chat</h1>
+    </div>
+
+    <div class="tab-switcher">
+      <button class="tab-btn active" id="contactTabBtn" data-i18n="newChat.newContactTab">New Contact</button>
+      <button class="tab-btn" id="groupTabBtn" data-i18n="newChat.newGroupTab">New Group</button>
+    </div>
+
+    <!-- مخاطب جدید -->
+    <div class="tab-panel active" id="contactTabPanel">
+      <div class="field">
+        <span class="field-icon">🆔</span>
+        <input type="text" id="contactIdInput" data-i18n-placeholder="newChat.userIdPlaceholder" placeholder="Enter user ID">
+      </div>
+      <button class="btn-aurora" id="addContactBtn">
+        <span data-i18n="newChat.addContactBtn">Add Contact</span>
+      </button>
+
+      <div class="settings-section-label" style="margin-top:24px;" data-i18n="newChat.contactsListLabel">Contacts</div>
+      <div class="contacts-list" id="contactsList"></div>
+    </div>
+
+    <!-- گروه جدید -->
+    <div class="tab-panel" id="groupTabPanel">
+      <div class="field">
+        <span class="field-icon">👥</span>
+        <input type="text" id="groupNameInput" data-i18n-placeholder="newChat.groupNamePlaceholder" placeholder="Group name">
+      </div>
+      <div class="field">
+        <span class="field-icon">#</span>
+        <input type="text" id="groupIdInput" data-i18n-placeholder="newChat.groupIdPlaceholder" placeholder="Group ID">
+      </div>
+      <button class="btn-aurora" id="createGroupBtn">
+        <span data-i18n="newChat.createGroupBtn">Create Group</span>
+      </button>
+    </div>
+
+  </div>
+
+<script src="../js/config.js"></script>
+<script src="../js/i18n.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/theme-init.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/ui-effects.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/pages/new-chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="appName">NetVibe</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/animations.css">
+<link rel="stylesheet" href="../css/auth.css">
+<link rel="stylesheet" href="../css/modal.css">
+</head>
+<body class="auth-page">
+
+  <div class="top-utility-bar">
+    <button class="utility-btn" id="langToggleBtn">English</button>
+  </div>
+
+  <div class="glass-card auth-card" id="authCard">
+
+    <div class="auth-success-overlay" id="successOverlay">
+      <div class="icon">✅</div>
+      <p data-i18n="auth.loginSuccessTitle">خوش آمدی!</p>
+      <span data-i18n="auth.loginSuccessSub">با موفقیت وارد شدید</span>
+    </div>
+
+    <div class="auth-logo-wrap">
+      <div class="auth-logo" id="authLogo" data-netvibe-logo></div>
+    </div>
+
+    <h2><span id="typedTitle"></span><span class="auth-cursor"></span></h2>
+
+    <div class="banner banner-error" id="errorBanner"></div>
+
+    <div class="auth-panel active" id="formPanel">
+
+      <div class="field">
+        <span class="field-icon">👤</span>
+        <input type="text" id="loginUsername" data-i18n-placeholder="auth.usernamePlaceholder" placeholder="Username" autocomplete="username">
+      </div>
+
+      <div class="field">
+        <span class="field-icon">🔒</span>
+        <input type="password" id="loginPassword" data-i18n-placeholder="auth.passwordPlaceholder" placeholder="Password" autocomplete="current-password">
+        <button class="field-toggle" id="loginEyeBtn" type="button">👁️</button>
+      </div>
+
+      <div class="auth-options">
+        <label class="auth-remember">
+          <input type="checkbox" id="rememberMe">
+          <span data-i18n="auth.rememberMe">Remember me</span>
+        </label>
+        <a href="#" id="forgotPasswordLink" data-i18n="auth.forgotPassword">Forgot password?</a>
+      </div>
+
+      <button class="btn-aurora" id="loginSubmitBtn" type="button">
+        <span data-i18n="auth.signInBtn">Sign In</span>
+      </button>
+
+      <div class="auth-switch-text">
+        <span data-i18n="auth.noAccount">Don't have an account?</span>
+        <a href="signup.html" data-i18n="auth.goSignup">Sign Up</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- بازیابی رمز عبور -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+
+  <div class="modal-center" id="forgotPasswordModal">
+    <div class="modal-title" data-i18n="auth.forgotPasswordTitle">Reset your password</div>
+    <div class="modal-body" data-i18n="auth.forgotPasswordStep1Desc">
+      Enter your username. Since this system has no email, a reset code and temporary password will be shown to you directly.
+    </div>
+    <div class="banner banner-error" id="forgotPasswordError" style="margin-bottom:12px;"></div>
+    <div class="field" style="margin-bottom:4px;">
+      <span class="field-icon">👤</span>
+      <input type="text" id="forgotUsernameInput" data-i18n-placeholder="auth.usernamePlaceholder" placeholder="Username" autocomplete="username">
+    </div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="modal-btn modal-btn-ghost" id="cancelForgotPasswordBtn" data-i18n="auth.cancel">Cancel</button>
+      <button class="modal-btn modal-btn-primary" id="submitForgotPasswordBtn" type="button">
+        <span data-i18n="auth.forgotPasswordSubmitBtn">Get reset code</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-center" id="resetPasswordModal">
+    <div class="modal-title" data-i18n="auth.resetPasswordTitle">Set a new password</div>
+    <div class="banner banner-error" id="resetPasswordError" style="margin-bottom:12px;"></div>
+
+    <div id="resetInfoBox" style="background:var(--surface-glass); border:1px solid var(--surface-border); border-radius:var(--radius-md); padding:12px; margin-bottom:14px; font-size:12.5px;">
+      <div style="color:var(--text-secondary); margin-bottom:10px; line-height:1.6;" data-i18n="auth.forgotPasswordResultDesc">
+        Save or copy this code and temporary password; they are valid for 15 minutes and shown only once.
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="color:var(--text-muted); min-width:78px; flex-shrink:0;" data-i18n="auth.forgotPasswordTokenLabel">Reset code</span>
+        <code id="resetTokenDisplay" style="flex:1; word-break:break-all; font-size:12px;"></code>
+        <button type="button" class="modal-btn modal-btn-ghost" id="copyTokenBtn" style="padding:4px 12px; flex-shrink:0;" data-i18n="auth.forgotPasswordCopyBtn">Copy</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:var(--text-muted); min-width:78px; flex-shrink:0;" data-i18n="auth.forgotPasswordTempPasswordLabel">Temp password</span>
+        <code id="resetTempPasswordDisplay" style="flex:1; word-break:break-all; font-size:12px;"></code>
+        <button type="button" class="modal-btn modal-btn-ghost" id="copyTempPasswordBtn" style="padding:4px 12px; flex-shrink:0;" data-i18n="auth.forgotPasswordCopyBtn">Copy</button>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <span class="field-icon">🔑</span>
+      <input type="text" id="resetTokenInput" data-i18n-placeholder="auth.resetPasswordTokenPlaceholder" placeholder="Reset code">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <span class="field-icon">🔒</span>
+      <input type="text" id="resetTempPasswordInput" data-i18n-placeholder="auth.resetPasswordTempPasswordPlaceholder" placeholder="Temporary password">
+    </div>
+
+    <div class="field">
+      <span class="field-icon">🔒</span>
+      <input type="password" id="resetNewPasswordInput" data-i18n-placeholder="auth.resetPasswordNewPasswordPlaceholder" placeholder="New password" autocomplete="new-password">
+      <button class="field-toggle" id="resetEyeBtn1" type="button">👁️</button>
+    </div>
+    <div class="auth-strength-bar"><div class="auth-strength-fill" id="resetStrengthFill"></div></div>
+
+    <div class="auth-pw-requirements" id="resetPwRequirements" style="display:none;">
+      <div class="auth-requirement" data-rule="length"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqLength"></span></div>
+      <div class="auth-requirement" data-rule="upper"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqUpper"></span></div>
+      <div class="auth-requirement" data-rule="lower"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqLower"></span></div>
+      <div class="auth-requirement" data-rule="digit"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqDigit"></span></div>
+      <div class="auth-requirement" data-rule="special"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqSpecial"></span></div>
+      <div class="auth-requirement" data-rule="noUsername"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqNoUsername"></span></div>
+    </div>
+
+    <div class="field">
+      <span class="field-icon">🔒</span>
+      <input type="password" id="resetConfirmPasswordInput" data-i18n-placeholder="auth.resetPasswordConfirmPlaceholder" placeholder="Confirm new password" autocomplete="new-password">
+      <button class="field-toggle" id="resetEyeBtn2" type="button">👁️</button>
+    </div>
+    <div class="auth-match-indicator" id="resetMatchIndicator">
+      <span class="auth-match-icon" id="resetMatchIcon">✓</span>
+      <span id="resetMatchText"></span>
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="modal-btn modal-btn-ghost" id="cancelResetPasswordBtn" data-i18n="auth.cancel">Cancel</button>
+      <button class="modal-btn modal-btn-primary" id="submitResetPasswordBtn" type="button">
+        <span data-i18n="auth.resetPasswordSubmitBtn">Set new password</span>
+      </button>
+    </div>
+  </div>
+
+<script src="../js/config.js"></script>
+<script src="../js/logo.js"></script>
+<script src="../js/i18n.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/theme-init.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/ui-effects.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/pages/login.js"></script>
+</body>
+</html>

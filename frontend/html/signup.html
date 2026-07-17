@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="appName">NetVibe</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/animations.css">
+<link rel="stylesheet" href="../css/auth.css">
+</head>
+<body class="auth-page">
+
+  <div class="top-utility-bar">
+    <button class="utility-btn" id="langToggleBtn">English</button>
+  </div>
+
+  <div class="glass-card auth-card" id="authCard">
+
+    <div class="auth-success-overlay" id="successOverlay">
+      <div class="icon">✅</div>
+      <p data-i18n="auth.signupSuccessTitle">به وب‌چت خوش اومدی!</p>
+      <span data-i18n="auth.signupSuccessSub">حساب شما ساخته شد</span>
+    </div>
+
+    <div class="auth-logo-wrap">
+      <div class="auth-logo" id="authLogo" data-netvibe-logo></div>
+    </div>
+
+    <h2><span id="typedTitle"></span><span class="auth-cursor"></span></h2>
+
+    <div class="banner banner-error" id="errorBanner"></div>
+
+    <div class="auth-panel active" id="formPanel">
+
+      <div class="field">
+        <span class="field-icon">👤</span>
+        <input type="text" id="signupUsername" data-i18n-placeholder="auth.usernamePlaceholder" placeholder="Username" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <span class="field-icon">🆔</span>
+        <input type="text" id="signupUserId" data-i18n-placeholder="auth.userIdPlaceholder" placeholder="User ID" autocomplete="username">
+      </div>
+
+      <div class="field">
+        <span class="field-icon">🔒</span>
+        <input type="password" id="signupPassword" data-i18n-placeholder="auth.passwordPlaceholder" placeholder="Password" autocomplete="new-password">
+        <button class="field-toggle" id="signupEyeBtn1" type="button">👁️</button>
+      </div>
+      <div class="auth-strength-bar"><div class="auth-strength-fill" id="strengthFill"></div></div>
+
+      <div class="auth-pw-requirements" id="pwRequirements" style="display:none;">
+        <div class="auth-requirement" data-rule="length"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqLength"></span></div>
+        <div class="auth-requirement" data-rule="upper"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqUpper"></span></div>
+        <div class="auth-requirement" data-rule="lower"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqLower"></span></div>
+        <div class="auth-requirement" data-rule="digit"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqDigit"></span></div>
+        <div class="auth-requirement" data-rule="special"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqSpecial"></span></div>
+        <div class="auth-requirement" data-rule="noUsername"><span class="auth-requirement-icon">✓</span><span data-i18n="auth.pwReqNoUsername"></span></div>
+      </div>
+
+      <div class="field">
+        <span class="field-icon">🔒</span>
+        <input type="password" id="confirmPassword" data-i18n-placeholder="auth.confirmPasswordPlaceholder" placeholder="Confirm Password" autocomplete="new-password">
+        <button class="field-toggle" id="signupEyeBtn2" type="button">👁️</button>
+      </div>
+      <div class="auth-match-indicator" id="matchIndicator">
+        <span class="auth-match-icon" id="matchIcon">✓</span>
+        <span id="matchText"></span>
+      </div>
+
+      <button class="btn-aurora" id="signupSubmitBtn" type="button">
+        <span data-i18n="auth.signUpBtn">Sign Up</span>
+      </button>
+
+      <div class="auth-switch-text">
+        <span data-i18n="auth.haveAccount">Already have an account?</span>
+        <a href="login.html" data-i18n="auth.goLogin">Sign In</a>
+      </div>
+    </div>
+
+  </div>
+
+<script src="../js/config.js"></script>
+<script src="../js/logo.js"></script>
+<script src="../js/i18n.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/theme-init.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/ui-effects.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/pages/signup.js"></script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+/* استایل صفحه تنظیمات */
+
+.settings-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(0,230,216,0.14), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(255,77,141,0.14), transparent 45%),
+    var(--bg-app);
+  display: flex;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.settings-shell {
+  width: 100%;
+  max-width: 480px;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.settings-header h1 {
+  font-size: 20px;
+  font-family: var(--font-display);
+}
+
+.settings-section {
+  margin-bottom: var(--space-lg);
+}
+.settings-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 var(--space-sm) var(--space-sm);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-border);
+  margin-bottom: var(--space-sm);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease;
+}
+.settings-row:hover { background: var(--surface-glass-hi); }
+.settings-row-icon {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--surface-glass-hi);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--aurora-teal);
+}
+.settings-row-icon svg { width: 19px; height: 19px; }
+.settings-row-label { flex: 1; font-size: 14.5px; font-weight: 500; }
+.settings-row-value { font-size: 13px; color: var(--text-muted); }
+
+.danger-row .settings-row-label { color: var(--state-error); }
+.danger-row .settings-row-icon { background: rgba(255,84,112,0.15); color: var(--state-error); }
+
+/* انتخاب‌گر سطح دسترسی (هیچ‌کس/مخاطبین/همه) */
+.visibility-select {
+  background: var(--surface-glass-hi);
+  color: var(--text-primary);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+  transition: background var(--dur-fast) ease;
+}
+.visibility-select:hover { background: rgba(255,255,255,0.22); }
+.visibility-select option {
+  background: var(--surface-solid);
+  color: var(--text-primary);
+}
+
+/* کارت پروفایل */
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg);
+  gap: var(--space-sm);
+}
+
+.profile-avatar-wrap {
+  position: relative;
+}
+.profile-avatar {
+  width: 92px; height: 92px;
+  font-size: 34px;
+  animation: floatY 3.5s ease-in-out infinite;
+}
+.profile-avatar-edit-btn {
+  position: absolute;
+  bottom: -2px;
+  inset-inline-end: -2px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-app);
+  background: var(--gradient-aurora);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.profile-avatar-edit-btn svg { width: 15px; height: 15px; }
+
+.userid-input { direction: ltr; text-align: right; }
+[dir="ltr"] .userid-input { text-align: left; }
+
+.bio-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--surface-glass);
+  border: none;
+  border-bottom: 2px solid rgba(255,84,112,0.5);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  transition: all var(--dur-normal) ease;
+}
+.bio-textarea:focus { background: var(--surface-glass-hi); border-bottom-color: var(--aurora-teal); }
+
+/* سوییچ تم (روشن/تیره) */
+.theme-switch {
+  position: relative;
+  width: 46px; height: 26px;
+  flex-shrink: 0;
+}
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.theme-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-glass-hi);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--dur-normal) ease;
+}
+.theme-switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  left: 3px; top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform var(--dur-normal) var(--ease-bounce);
+}
+.theme-switch input:checked + .theme-switch-slider { background: var(--gradient-aurora); }
+.theme-switch input:checked + .theme-switch-slider::before { transform: translateX(20px); }
+[dir="rtl"] .theme-switch input:checked + .theme-switch-slider::before { transform: translateX(-20px); }
+
+/* انتخاب‌گر رنگ پس‌زمینه */
+.settings-row-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.settings-row-top-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+.color-swatch-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-inline-start: calc(38px + var(--space-md));
+}
+.color-swatch {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-bounce), border-color var(--dur-fast) ease;
+  padding: 0;
+}
+.color-swatch:hover { transform: scale(1.12); }
+.color-swatch.active {
+  border-color: var(--text-primary);
+  transform: scale(1.15);
+}
+
+/* سوییچر سایز فونت پیام‌ها */
+.font-size-switcher {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-glass-hi);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+}
+.font-size-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-pill);
+  padding: 4px 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all var(--dur-fast) ease;
+}
+.font-size-btn:nth-child(1) { font-size: 10px; }
+.font-size-btn:nth-child(2) { font-size: 12.5px; }
+.font-size-btn:nth-child(3) { font-size: 15px; }
+.font-size-btn:nth-child(4) { font-size: 17.5px; }
+.font-size-btn:nth-child(5) { font-size: 20px; }
+.font-size-btn.active {
+  background: var(--gradient-aurora);
+  color: white;
+}
+
+/* ورودی تاریخ تولد */
+.birthdate-input {
+  color-scheme: dark;
+}
+[data-theme="light"] .birthdate-input {
+  color-scheme: light;
+}
+
+/* ردیف لیست بلاک‌شده‌ها */
+.blocked-user-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px 12px;
+}
+.blocked-user-row .avatar { width: 40px; height: 40px; font-size: 15px; }
+.blocked-user-row-name { flex: 1; font-size: 14px; font-weight: 600; }
+.unblock-btn {
+  border: none;
+  background: var(--surface-glass-hi);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease;
+}
+.unblock-btn:hover { background: rgba(255,255,255,0.22); }

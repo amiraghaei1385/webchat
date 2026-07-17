@@ -1,0 +1,72 @@
+/* استایل صفحه گفتگوی جدید */
+
+.newchat-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(0,230,216,0.14), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(255,77,141,0.14), transparent 45%),
+    var(--bg-app);
+  display: flex;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.newchat-shell {
+  width: 100%;
+  max-width: 480px;
+}
+
+.newchat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.newchat-header h1 { font-size: 20px; font-family: var(--font-display); }
+
+.tab-switcher {
+  display: flex;
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  margin-bottom: var(--space-lg);
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  transition: all var(--dur-normal) ease;
+}
+.tab-btn.active {
+  background: var(--gradient-aurora);
+  color: white;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: popIn 0.25s ease; }
+
+.contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-md);
+}
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease;
+}
+.contact-row:hover { background: var(--surface-glass); }
+.contact-row .avatar { width: 46px; height: 46px; font-size: 18px; }
+.contact-name { font-weight: 600; font-size: 14.5px; }
+.contact-status { font-size: 12px; color: var(--text-muted); }

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="appName">NetVibe</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/animations.css">
+<link rel="stylesheet" href="../css/chat.css">
+<link rel="stylesheet" href="../css/modal.css">
+</head>
+<body class="chat-page">
+
+  <div class="chat-shell">
+
+    <div class="chat-header">
+      <button class="chat-back-btn" id="backBtn"><span class="back-arrow-icon">→</span></button>
+      <div class="avatar chat-header-avatar" id="headerAvatar"></div>
+      <div class="chat-header-info" id="headerInfo">
+        <div class="chat-header-name" id="headerName">—</div>
+        <div class="chat-header-status" id="headerStatus"></div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="icon-btn" id="chatMenuBtn">⋮</button>
+        <div class="dropdown-menu" id="chatDropdownMenu">
+          <button class="dropdown-item" id="searchInChatItem"><span data-icon="search"></span><span data-i18n="chat.searchInChat">Search</span></button>
+          <button class="dropdown-item" id="muteToggleItem">
+            <span class="mute-icon-on" data-icon="bell"></span>
+            <span class="mute-icon-off" data-icon="bellOff"></span>
+            <span id="muteToggleLabel" data-i18n="chat.muteNotifications">Mute notifications</span>
+          </button>
+          <button class="dropdown-item" id="archiveChatItem"><span data-icon="archive"></span><span data-i18n="chat.archiveChat">Archive</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-search-bar" id="chatSearchBar" style="display:none;">
+      <input type="text" class="chat-search-input" id="chatSearchInput" data-i18n-placeholder="chat.searchInChat" placeholder="Search">
+      <button class="chat-search-close" id="chatSearchCloseBtn">&times;</button>
+    </div>
+    <div class="chat-search-results" id="chatSearchResults" style="display:none;"></div>
+
+    <div class="chat-messages" id="chatMessages"></div>
+
+    <div class="reply-preview-bar" id="replyPreviewBar" style="display:none;">
+      <div class="reply-preview-icon" data-icon="reply"></div>
+      <div class="reply-preview-body">
+        <div class="reply-preview-label" data-i18n="chat.replyAction">Reply</div>
+        <div class="reply-preview-text" id="replyPreviewText"></div>
+      </div>
+      <button class="reply-preview-close" id="replyPreviewCloseBtn">&times;</button>
+    </div>
+
+    <div class="chat-composer">
+      <div class="composer-attach-wrap">
+        <button class="composer-attach-btn" id="attachBtn" title="Attach" data-icon="paperclip"></button>
+        <div class="dropdown-menu attach-menu" id="attachMenu">
+          <button class="dropdown-item" id="attachImageItem"><span data-icon="image"></span><span data-i18n="chat.attachImage">Photo</span></button>
+          <button class="dropdown-item" id="attachVideoItem"><span data-icon="video"></span><span data-i18n="chat.attachVideo">Video</span></button>
+          <button class="dropdown-item" id="attachAudioItem"><span data-icon="mic"></span><span data-i18n="chat.attachAudio">Audio</span></button>
+          <button class="dropdown-item" id="attachFileItem"><span data-icon="file"></span><span data-i18n="chat.attachFile">File</span></button>
+        </div>
+        <input type="file" id="fileInputImage" accept="image/*" hidden>
+        <input type="file" id="fileInputVideo" accept="video/*" hidden>
+        <input type="file" id="fileInputAudio" accept="audio/*" hidden>
+        <input type="file" id="fileInputFile" hidden>
+      </div>
+      <div class="composer-input-wrap">
+        <textarea class="composer-input" id="composerInput" rows="1" data-i18n-placeholder="chat.typeMessagePlaceholder" placeholder="Type a message..."></textarea>
+        <span class="composer-char-count" id="charCount"></span>
+      </div>
+      <button class="composer-send-btn" id="sendBtn" disabled>➤</button>
+    </div>
+
+  </div>
+
+  <div class="spam-toast" id="spamToast"></div>
+
+  <!-- منوی پیام -->
+  <div class="msg-context-menu" id="msgContextMenu">
+    <button class="msg-context-item" data-action="reply"><span data-icon="reply"></span><span data-i18n="chat.replyAction">Reply</span></button>
+    <button class="msg-context-item" data-action="edit"><span data-icon="edit"></span><span data-i18n="chat.editAction">Edit</span></button>
+    <button class="msg-context-item" data-action="report"><span data-icon="flag"></span><span data-i18n="chat.reportAction">Report</span></button>
+    <button class="msg-context-item danger" data-action="delete"><span data-icon="trash"></span><span data-i18n="chat.deleteAction">Delete</span></button>
+  </div>
+
+  <!-- نوار ریاکشن سریع -->
+  <div class="reaction-picker" id="reactionPicker">
+    <button class="reaction-picker-emoji" data-emoji="👍">👍</button>
+    <button class="reaction-picker-emoji" data-emoji="❤️">❤️</button>
+    <button class="reaction-picker-emoji" data-emoji="😂">😂</button>
+    <button class="reaction-picker-emoji" data-emoji="😮">😮</button>
+    <button class="reaction-picker-emoji" data-emoji="😢">😢</button>
+    <button class="reaction-picker-emoji" data-emoji="🙏">🙏</button>
+  </div>
+
+  <!-- بک‌دراپ -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+
+  <!-- حذف پیام -->
+  <div class="modal-center" id="deleteConfirmModal">
+    <div class="modal-title" data-i18n="chat.deleteAction">Delete</div>
+    <div class="modal-body" data-i18n="chat.confirmDeleteMessage">Delete this message?</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-ghost" id="cancelDeleteBtn" data-i18n="chat.cancel">Cancel</button>
+      <button class="modal-btn modal-btn-danger" id="confirmDeleteBtn" data-i18n="chat.confirm">Confirm</button>
+    </div>
+  </div>
+
+  <!-- گزارش پیام -->
+  <div class="modal-center" id="reportModal">
+    <div class="modal-title" data-i18n="chat.reportTitle">Report this message</div>
+    <textarea class="modal-textarea" id="reportReasonInput" data-i18n-placeholder="chat.reportReasonPlaceholder" placeholder="Reason (optional)"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-ghost" id="cancelReportBtn" data-i18n="chat.cancel">Cancel</button>
+      <button class="modal-btn modal-btn-primary" id="confirmReportBtn" data-i18n="chat.confirm">Confirm</button>
+    </div>
+  </div>
+
+  <!-- افزودن عضو به گروه -->
+  <div class="modal-center" id="addMemberModal">
+    <div class="modal-title" data-i18n="chat.addMember">Add member</div>
+    <div class="side-panel-section" id="addMemberList"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-ghost" id="cancelAddMemberBtn" data-i18n="chat.cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- اطلاعات چت -->
+  <div class="side-panel" id="chatInfoPanel">
+    <div class="side-panel-header">
+      <button class="side-panel-close" id="closeInfoPanelBtn"><span class="back-arrow-icon">→</span></button>
+    </div>
+    <div class="side-panel-hero">
+      <div class="profile-avatar-wrap">
+        <div class="avatar" id="infoAvatar"></div>
+        <button class="profile-avatar-edit-btn" id="changeGroupAvatarBtn" title="Change group photo" data-icon="camera" style="display:none;"></button>
+        <input type="file" id="groupAvatarFileInput" accept="image/*" hidden>
+      </div>
+      <div class="side-panel-hero-name" id="infoName">—</div>
+      <div class="side-panel-hero-sub" id="infoSub"></div>
+      <div class="side-panel-hero-userid" id="infoUserId" style="display:none;"></div>
+    </div>
+    <div class="side-panel-section" id="infoActionsSection"></div>
+    <div class="side-panel-section" id="infoMembersSection" style="display:none;"></div>
+    <div class="side-panel-section" id="infoMutualGroupsSection" style="display:none;"></div>
+  </div>
+
+  <!-- تاریخچه‌ی پیام‌های ویرایش‌شده و حذف‌شده -->
+  <div class="side-panel" id="historyPanel">
+    <div class="side-panel-header">
+      <button class="side-panel-close" id="closeHistoryPanelBtn"><span class="back-arrow-icon">→</span></button>
+      <span data-i18n="chat.history">History</span>
+    </div>
+    <div class="side-panel-section" id="historyListSection"></div>
+  </div>
+
+<script src="../js/config.js"></script>
+<script src="../js/i18n.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/theme-init.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/ui-effects.js"></script>
+<script src="../js/icons.js"></script>
+<script src="../js/spam-guard.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/pages/chat.js"></script>
+</body>
+</html>

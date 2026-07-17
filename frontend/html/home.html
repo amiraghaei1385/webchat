@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="appName">NetVibe</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/animations.css">
+<link rel="stylesheet" href="../css/home.css">
+<link rel="stylesheet" href="../css/modal.css">
+<link rel="stylesheet" href="../css/stories.css">
+</head>
+<body class="home-page">
+
+  <div class="home-shell">
+
+    <div class="home-header">
+      <div class="home-brand">
+        <div class="home-brand-icon" data-netvibe-logo></div>
+        <span data-i18n="appName">NetVibe</span>
+      </div>
+      <div class="home-header-actions">
+        <button class="icon-btn" id="menuBtn" title="Menu">⋮</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <button class="dropdown-item" id="savedMessagesMenuItem">
+            <span>🔖</span>
+            <span data-i18n="home.savedMessages">Saved Messages</span>
+          </button>
+          <button class="dropdown-item" id="themeMenuItem">
+            <span class="theme-menu-icon" id="themeMenuIcon">🌙</span>
+            <span id="themeMenuLabel" data-i18n="settings.themeDark">Dark</span>
+          </button>
+          <button class="dropdown-item" id="settingsMenuItem">
+            <span>⚙️</span>
+            <span data-i18n="home.settingsLabel">Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- استوری‌ها -->
+    <div class="stories-row" id="storiesRow"></div>
+
+    <div class="search-bar">
+      <span class="search-bar-icon">🔍</span>
+      <input type="text" id="searchInput" data-i18n-placeholder="home.searchPlaceholder" placeholder="Search chats...">
+    </div>
+
+    <!-- آرشیو (پنهان) -->
+    <div class="archive-reveal" id="archiveReveal">
+      <div class="archive-row" id="archiveRow">
+        <div class="archive-row-icon">🗄️</div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px;" data-i18n="home.archivedChats">Archived Chats</div>
+        </div>
+        <span class="badge-count" id="archiveCount" style="display:none;">0</span>
+      </div>
+    </div>
+
+    <div class="pull-hint" id="pullHint">
+      <span class="pull-hint-arrow">⌄</span>
+    </div>
+
+    <div class="chat-list" id="chatList">
+    </div>
+
+  </div>
+
+  <button class="fab-new-chat" id="newChatFab" title="New Chat">+</button>
+
+  <div class="chat-row-menu" id="chatRowMenu">
+    <button class="chat-row-menu-item" id="rowMenuPinItem"><span data-icon="pin"></span><span id="rowMenuPinLabel"></span></button>
+    <button class="chat-row-menu-item" id="rowMenuArchiveItem"><span data-icon="archive"></span><span id="rowMenuArchiveLabel"></span></button>
+    <button class="chat-row-menu-item danger" id="rowMenuDeleteItem"><span data-icon="trash"></span><span data-i18n="home.deleteChat">Delete chat</span></button>
+  </div>
+
+  <!-- مودال افزودن استوری -->
+  <div class="modal-backdrop" id="storyModalBackdrop"></div>
+  <div class="modal-center" id="addStoryModal">
+    <div class="modal-title" data-i18n="stories.addStoryTitle">Add story</div>
+
+    <div class="story-type-tabs">
+      <button class="story-type-tab active" id="storyTypeTextBtn" data-i18n="stories.typeText">Text</button>
+      <button class="story-type-tab" id="storyTypeImageBtn" data-i18n="stories.typeImage">Photo</button>
+      <button class="story-type-tab" id="storyTypeVideoBtn" data-i18n="stories.typeVideo">Video</button>
+    </div>
+
+    <textarea class="modal-textarea" id="storyTextInput" data-i18n-placeholder="stories.textPlaceholder" placeholder="What's on your mind?"></textarea>
+
+    <div id="storyMediaArea" style="display:none;">
+      <input type="file" id="storyMediaInput" accept="image/*" hidden>
+      <div class="story-media-drop" id="storyMediaDrop" data-i18n="stories.chooseFile">Choose a file</div>
+      <img id="storyMediaPreviewImg" style="display:none; max-width:100%; border-radius:12px; margin-top:8px;">
+      <video id="storyMediaPreviewVideo" style="display:none; max-width:100%; border-radius:12px; margin-top:8px;" controls></video>
+      <input type="text" class="modal-textarea" id="storyCaptionInput" style="min-height:auto; margin-top:8px;" data-i18n-placeholder="stories.captionPlaceholder" placeholder="Caption (optional)">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-ghost" id="cancelAddStoryBtn" data-i18n="chat.cancel">Cancel</button>
+      <button class="modal-btn modal-btn-primary" id="publishStoryBtn" data-i18n="stories.publish">Publish</button>
+    </div>
+  </div>
+
+  <!-- نمایشگر استوری -->
+  <div class="story-viewer" id="storyViewer" style="display:none;">
+    <div class="story-viewer-progress" id="storyViewerProgress"></div>
+    <div class="story-viewer-header">
+      <div class="avatar" id="storyViewerAvatar"></div>
+      <div style="flex:1;">
+        <div class="story-viewer-name" id="storyViewerName"></div>
+        <div class="story-viewer-time" id="storyViewerTime"></div>
+      </div>
+      <button class="story-viewer-delete" id="storyViewerDeleteBtn" style="display:none;">🗑️</button>
+      <button class="story-viewer-close" id="storyViewerCloseBtn">&times;</button>
+    </div>
+    <div class="story-viewer-body" id="storyViewerBody"></div>
+    <div class="story-viewer-nav">
+      <div class="story-viewer-nav-zone" id="storyViewerPrevZone"></div>
+      <div class="story-viewer-nav-zone" id="storyViewerNextZone"></div>
+    </div>
+  </div>
+
+
+<script src="../js/config.js"></script>
+<script src="../js/logo.js"></script>
+<script src="../js/i18n.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/theme-init.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/ui-effects.js"></script>
+<script src="../js/icons.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/stories.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/pages/home.js"></script>
+</body>
+</html>

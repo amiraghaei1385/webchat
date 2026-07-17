@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="settings.title">تنظیمات</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/animations.css">
+<link rel="stylesheet" href="../css/settings.css">
+<link rel="stylesheet" href="../css/modal.css">
+</head>
+<body class="settings-page">
+
+  <div class="settings-shell">
+
+    <div class="settings-header">
+      <button class="chat-back-btn" id="backBtn"><span class="back-arrow-icon">→</span></button>
+      <h1 data-i18n="settings.title">Settings</h1>
+    </div>
+
+    <!-- پروفایل -->
+    <div class="settings-section">
+      <div class="settings-section-label" data-i18n="settings.sectionProfile">Profile</div>
+
+      <div class="profile-card glass-card">
+        <div class="profile-avatar-wrap">
+          <div class="avatar profile-avatar" id="profileAvatar">?</div>
+          <button class="profile-avatar-edit-btn" id="changeAvatarBtn" title="Change avatar" data-icon="camera"></button>
+          <input type="file" id="avatarFileInput" accept="image/*" hidden>
+        </div>
+        <div class="field" style="width:100%; margin-top:16px;">
+          <span class="field-icon" data-icon="user"></span>
+          <input type="text" id="usernameInput" data-i18n-placeholder="settings.usernameLabel" placeholder="Username">
+        </div>
+        <div class="field" style="width:100%;">
+          <span class="field-icon" data-icon="idCard"></span>
+          <input type="text" id="userIdInput" class="userid-input" data-i18n-placeholder="settings.userIdLabel" placeholder="User ID">
+        </div>
+        <div class="field" style="width:100%;">
+          <span class="field-icon" data-icon="mail"></span>
+          <input type="email" id="emailInput" data-i18n-placeholder="settings.emailLabel" placeholder="Email">
+        </div>
+        <div class="field" style="width:100%;">
+          <span class="field-icon" data-icon="cake"></span>
+          <input type="date" id="birthdateInput" class="birthdate-input">
+        </div>
+        <div class="field" style="width:100%;">
+          <textarea id="bioInput" class="bio-textarea" data-i18n-placeholder="settings.bioLabel" placeholder="Bio" rows="2"></textarea>
+        </div>
+        <button class="btn-aurora" id="saveProfileBtn" style="margin-top:4px;">
+          <span data-i18n="settings.saveChanges">Save changes</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ترجیحات -->
+    <div class="settings-section">
+      <div class="settings-section-label" data-i18n="settings.sectionPreferences">Preferences</div>
+
+      <div class="settings-row" id="languageRow">
+        <div class="settings-row-icon" data-icon="globe"></div>
+        <div class="settings-row-label" data-i18n="settings.language">Language</div>
+        <div class="settings-row-value" id="languageValue">فارسی</div>
+      </div>
+
+      <div class="settings-row" id="themeRow">
+        <div class="settings-row-icon" data-icon="moon"></div>
+        <div class="settings-row-label" data-i18n="settings.theme">Theme</div>
+        <label class="theme-switch">
+          <input type="checkbox" id="themeToggleInput">
+          <span class="theme-switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-row settings-row-stacked" id="bgColorRow">
+        <div class="settings-row-top-line">
+          <div class="settings-row-icon" data-icon="palette"></div>
+          <div class="settings-row-label" data-i18n="settings.backgroundColor">Background color</div>
+        </div>
+        <div class="color-swatch-group" id="colorSwatchGroup">
+          <button class="color-swatch active" data-color="aurora" style="background:var(--gradient-aurora);" title="Aurora"></button>
+          <button class="color-swatch" data-color="ocean" style="background:linear-gradient(135deg,#00b4d8,#023e8a);" title="Ocean"></button>
+          <button class="color-swatch" data-color="sunset" style="background:linear-gradient(135deg,#ff9a56,#ff4d8d);" title="Sunset"></button>
+          <button class="color-swatch" data-color="forest" style="background:linear-gradient(135deg,#38ef7d,#11998e);" title="Forest"></button>
+          <button class="color-swatch" data-color="mono" style="background:linear-gradient(135deg,#4b5563,#1f2937);" title="Mono"></button>
+          <button class="color-swatch" data-color="candy" style="background:linear-gradient(135deg,#ff6ec7,#a83279);" title="Candy"></button>
+          <button class="color-swatch" data-color="lava" style="background:linear-gradient(135deg,#ff512f,#dd2476);" title="Lava"></button>
+          <button class="color-swatch" data-color="mint" style="background:linear-gradient(135deg,#00f5a0,#00d9f5);" title="Mint"></button>
+          <button class="color-swatch" data-color="gold" style="background:linear-gradient(135deg,#f7971e,#ffd200);" title="Gold"></button>
+          <button class="color-swatch" data-color="royal" style="background:linear-gradient(135deg,#7f00ff,#e100ff);" title="Royal"></button>
+        </div>
+      </div>
+
+      <div class="settings-row" id="fontSizeRow">
+        <div class="settings-row-icon" data-icon="textSize"></div>
+        <div class="settings-row-label" data-i18n="settings.fontSize">Message font size</div>
+        <div class="font-size-switcher" id="fontSizeSwitcher">
+          <button class="font-size-btn" data-size="xsmall" data-i18n-title="settings.fontSizeXSmall" title="Extra Small">A</button>
+          <button class="font-size-btn" data-size="small" data-i18n-title="settings.fontSizeSmall" title="Small">A</button>
+          <button class="font-size-btn active" data-size="medium" data-i18n-title="settings.fontSizeMedium" title="Medium">A</button>
+          <button class="font-size-btn" data-size="large" data-i18n-title="settings.fontSizeLarge" title="Large">A</button>
+          <button class="font-size-btn" data-size="xlarge" data-i18n-title="settings.fontSizeXLarge" title="Extra Large">A</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- حریم خصوصی -->
+    <div class="settings-section">
+      <div class="settings-section-label" data-i18n="settings.sectionPrivacy">Privacy</div>
+
+      <div class="settings-row" id="blockedUsersRow">
+        <div class="settings-row-icon" data-icon="userBlocked"></div>
+        <div class="settings-row-label" data-i18n="settings.blockedUsers">Blocked users</div>
+        <div class="settings-row-value" id="blockedCountValue">0</div>
+      </div>
+    </div>
+
+    <!-- حساب کاربری -->
+    <div class="settings-section">
+      <div class="settings-section-label" data-i18n="settings.sectionAccount">Account</div>
+
+      <div class="settings-row" id="logoutRow">
+        <div class="settings-row-icon" data-icon="logout"></div>
+        <div class="settings-row-label" data-i18n="settings.logout">Log out</div>
+      </div>
+
+      <div class="settings-row danger-row" id="deleteAccountRow">
+        <div class="settings-row-icon" data-icon="trash"></div>
+        <div class="settings-row-label" data-i18n="settings.deleteAccount">Delete account</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- مودال‌ها -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+
+  <div class="modal-center" id="logoutModal">
+    <div class="modal-title" data-i18n="settings.logout">Log out</div>
+    <div class="modal-body" data-i18n="settings.confirmLogout">Log out of your account?</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-ghost" id="cancelLogoutBtn" data-i18n="chat.cancel">Cancel</button>
+      <button class="modal-btn modal-btn-danger" id="confirmLogoutBtn" data-i18n="settings.logout">Log out</button>
+    </div>
+  </div>
+
+  <div class="modal-center" id="deleteAccountModal">
+    <div class="modal-title" data-i18n="settings.deleteAccount">Delete account</div>
+    <div class="modal-body" data-i18n="settings.deleteAccountWarning">This action is irreversible.</div>
+    <div class="field" style="margin-bottom:12px;">
+      <input type="text" id="deleteConfirmInput" data-i18n-placeholder="settings.confirmDeleteAccount" placeholder='Type "delete" to confirm'>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-ghost" id="cancelDeleteAccountBtn" data-i18n="chat.cancel">Cancel</button>
+      <button class="modal-btn modal-btn-danger" id="confirmDeleteAccountBtn" data-i18n="settings.deleteAccount">Delete account</button>
+    </div>
+  </div>
+
+  <!-- کاربران مسدود -->
+  <div class="side-panel" id="blockedPanel">
+    <div class="side-panel-header">
+      <button class="side-panel-close" id="closeBlockedPanelBtn" data-i18n-flip>→</button>
+      <div style="font-weight:700; font-size:15px;" data-i18n="settings.blockedUsers">Blocked users</div>
+    </div>
+    <div class="side-panel-section" id="blockedListSection"></div>
+  </div>
+
+<script src="../js/config.js"></script>
+<script src="../js/i18n.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/theme-init.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/ui-effects.js"></script>
+<script src="../js/icons.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/pages/settings.js"></script>
+</body>
+</html>

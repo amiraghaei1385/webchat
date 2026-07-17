@@ -1,0 +1,83 @@
+/* ریست پایه و تایپوگرافی */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* فونت پیش‌فرض بر اساس زبان صفحه تعیین می‌شود */
+html[lang="fa"] {
+  --font-display: var(--font-display-fa);
+  --font-body: var(--font-body-fa);
+}
+html[lang="en"] {
+  --font-display: var(--font-display-en);
+  --font-body: var(--font-body-en);
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-body);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* آینه کردن خودکار در RTL */
+[dir="rtl"] [data-i18n-flip] {
+  transform: scaleX(-1);
+}
+
+/* چرخش فلش برگشت در RTL */
+.back-arrow-icon {
+  display: inline-flex;
+  transition: transform var(--dur-normal) ease;
+}
+[dir="rtl"] .back-arrow-icon {
+  transform: rotate(180deg);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, textarea {
+  font-family: inherit;
+}
+
+img { max-width: 100%; display: block; }
+
+/* اسکرول‌بار سفارشی برای هماهنگی با هویت بصری */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--surface-glass-hi);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--aurora-violet); }
+
+/* مخفی بصری، در دسترس screen reader */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
