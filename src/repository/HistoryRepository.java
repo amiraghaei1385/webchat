@@ -7,8 +7,9 @@ public interface HistoryRepository {
 
     void save(MessageHistory history);
 
-    // برگرداندن تمام نسخه‌های تاریخچه یک پیامبه ترتیب نسخه
     List<MessageHistory> findByMessageId(String chatId, String messageId);
+
+    List<MessageHistory> findByChatId(String chatId);
 
     int countByMessageId(String chatId, String messageId);
 

@@ -59,6 +59,8 @@ public class ChatController implements HttpHandler {
                 doSetArchived(ctx, user);
             } else if (method.equals("GET") && path.matches("/api/chats/[^/]+/messages")) {
                 doGetMessages(ctx, user);
+            } else if (method.equals("PUT") && path.matches("/api/chats/[^/]+/mute")) {
+                doSetMuted(ctx, user);
             } else if (method.equals("POST") && path.matches("/api/chats/[^/]+/messages")) {
                 doSendMessage(ctx, user);
             } else if (method.equals("PUT") && path.matches("/api/chats/[^/]+/messages/[^/]+")) {
@@ -69,6 +71,8 @@ public class ChatController implements HttpHandler {
                 doReportMessage(ctx, user);
             } else if (method.equals("GET") && path.matches("/api/chats/[^/]+/messages/[^/]+/history")) {
                 doGetMessageHistory(ctx, user);
+            } else if (method.equals("GET") && path.matches("/api/chats/[^/]+/history")) {
+                doGetChatHistory(ctx, user);
             } else {
                 HttpApiServer.sendResponse(exchange, 404, "{\"error\":\"Not found.\"}");
             }
@@ -100,6 +104,13 @@ public class ChatController implements HttpHandler {
         String idchat = getChatId(ctx.getPath());
         chatserv.markAsRead(idchat, user.getId());
         HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Marked as read.\"}");
+    }
+
+    private void doSetMuted(RequestContext ctx, User user) throws IOException {
+        String idchat = getChatId(ctx.getPath());
+        boolean muted = getBool(ctx.getBody(), "muted");
+        pinfolderserv.setMuted(idchat, user.getId(), muted);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Updated.\"}");
     }
 
     // ساخت یا گرفتن چت خصوصی با یه کاربر دیگه
@@ -163,6 +174,21 @@ public class ChatController implements HttpHandler {
         HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Message updated.\"}");
     }
 
+    // تاریخچه‌ی کامل یک گفتگو
+    private void doGetChatHistory(RequestContext ctx, User user) throws IOException {
+        String idchat = getChatId(ctx.getPath());
+        List<MessageHistory> listhistory = historyserv.getChatHistory(idchat, user.getId());
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < listhistory.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(historyToJson(listhistory.get(i)));
+        }
+        sb.append("]");
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, sb.toString());
+    }
+
     // گرفتن تاریخچه‌ی ویرایش و حذف یه پیام
     private void doGetMessageHistory(RequestContext ctx, User user) throws IOException {
         String idchat = getChatId(ctx.getPath());
@@ -193,19 +219,29 @@ public class ChatController implements HttpHandler {
                 + "\"type\":\"" + chat.getType() + "\","
                 + "\"pinned\":" + chat.isPinned() + ","
                 + "\"archived\":" + chat.isArchived() + ","
+                + "\"muted\":" + chat.isMuted() + ","
                 + "\"unreadCount\":" + unreadcount + ","
                 + "\"lastMessageAt\":\""
                 + (chat.getLastMessageAt() != null ? chat.getLastMessageAt() : "") + "\"}";
     }
 
     private String messageToJson(Message msg) {
+        String idmediamessage = msg.getMediaMessageId();
+        String mediapart;
+        if (idmediamessage != null) {
+            mediapart = "\"" + idmediamessage + "\"";
+        } else {
+            mediapart = "null";
+        }
         return "{\"id\":\"" + msg.getId() + "\","
                 + "\"chatId\":\"" + msg.getChatId() + "\","
                 + "\"senderId\":\"" + msg.getSenderId() + "\","
                 + "\"content\":\"" + escape(msg.getEncryptedContent()) + "\","
                 + "\"sentAt\":\"" + msg.getSentAt() + "\","
                 + "\"editedAt\":\"" + (msg.getEditedAt() != null ? msg.getEditedAt() : "") + "\","
-                + "\"isDeleted\":" + msg.isDeleted() + "}";
+                + "\"isDeleted\":" + msg.isDeleted() + ","
+                + "\"hasMedia\":" + msg.isHasMedia() + ","
+                + "\"mediaMessageId\":" + mediapart + "}";
     }
 
     private String historyToJson(MessageHistory h) {

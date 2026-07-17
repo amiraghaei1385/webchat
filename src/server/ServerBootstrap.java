@@ -34,14 +34,19 @@ public class ServerBootstrap {
         httpServer.register("POST", "/api/auth/login", authController);
         httpServer.register("POST", "/api/auth/register", authController);
         httpServer.register("POST", "/api/auth/logout", authController);
+        httpServer.register("POST", "/api/auth/forgot-password", authController);
+        httpServer.register("POST", "/api/auth/reset-password", authController);
         // چت‌ها و پیام‌ها
         ChatController chatController = new ChatController(chatService, messageService,
                 historyService, pinAndFolderService, sessionManager);
+        httpServer.register("POST", "/api/chats", chatController);
         httpServer.register("GET", "/api/chats", chatController);
         httpServer.register("DELETE", "/api/chats", chatController);
         httpServer.register("POST", "/api/chats/private", chatController);
         httpServer.register("PUT", "/api/chats", chatController);
-
+        // عکس پروفایل و عکس گروه
+        AvatarController avatarController = new AvatarController(userService, groupService, sessionManager);
+        httpServer.register("GET", "/api/avatars", avatarController);
         // کاربران
         UserController userController = new UserController(userService, sessionManager);
         httpServer.register("GET", "/api/users", userController);
@@ -52,6 +57,8 @@ public class ServerBootstrap {
         httpServer.register("PUT", "/api/users/me/background-picture", userController);
         httpServer.register("DELETE", "/api/users/me/background-picture", userController);
         httpServer.register("DELETE", "/api/users/me", userController);
+        httpServer.register("PUT", "/api/users/me/bio", userController);
+        httpServer.register("POST", "/api/users/me/profile-picture/upload", userController);
         httpServer.register("PUT", "/api/users/me/email", userController);
         httpServer.register("DELETE", "/api/users/me/email", userController);
         httpServer.register("PUT", "/api/users/me/birth-date", userController);
@@ -82,7 +89,6 @@ public class ServerBootstrap {
         httpServer.register("POST", "/api/media", mediaController);
         httpServer.register("GET", "/api/media", mediaController);
         httpServer.register("PUT", "/api/media", mediaController);
-
         // بخش سرچ که امتیازی
         SearchController searchController = new SearchController(searchService, sessionManager);
         httpServer.register("GET", "/api/search/chats", searchController);

@@ -10,11 +10,12 @@ import java.util.Map;
 public class Chat {
     private String id;
     private ChatType type;
-    private List<String> idmember; 
-    private String idlastmessage; 
+    private List<String> idmember;
+    private String idlastmessage;
     private LocalDateTime lastmessageat;
     private boolean isarchive;
     private boolean ispin;
+    private boolean ismute;
     private String folderId;
     private LocalDateTime createat;
     private Map<String, LocalDateTime> lastreadat;
@@ -30,6 +31,7 @@ public class Chat {
         this.idmember = new ArrayList<>();
         this.isarchive = false;
         this.ispin = false;
+        this.ismute = false;
         this.createat = LocalDateTime.now();
         this.lastreadat = new HashMap<>();
     }
@@ -53,6 +55,10 @@ public class Chat {
 
     public LocalDateTime getLastMessageAt() {
         return lastmessageat;
+    }
+
+    public boolean isMuted() {
+        return ismute;
     }
 
     public boolean isArchived() {
@@ -90,6 +96,10 @@ public class Chat {
 
     public void setArchived(boolean archived) {
         this.isarchive = archived;
+    }
+
+    public void setMuted(boolean muted) {
+        this.ismute = muted;
     }
 
     public void setPinned(boolean pinned) {

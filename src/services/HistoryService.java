@@ -49,11 +49,25 @@ public class HistoryService {
         if (optmessage.isEmpty() || !optmessage.get().getChatId().equals(chatId)) {
             throw new IllegalArgumentException("Message not found in this chat.");
         }
-        List<MessageHistory> result = new ArrayList<>();
+        List<MessageHistory> res = new ArrayList<>();
         for (MessageHistory item : historyrepo.findByMessageId(chatId, messageId)) {
-            result.add(toDecryptedCopy(item));
+            res.add(toDecryptedCopy(item));
         }
-        return result;
+        return res;
+    }
+
+    // دریافت کل تاریخچه یک گفتگو
+    public List<MessageHistory> getChatHistory(String chatId, String requesterId) {
+        Optional<models.Chat> optchat = chatrepo.findById(chatId);
+        if (optchat.isEmpty() || !optchat.get().getMemberIds().contains(requesterId)) {
+            throw new IllegalStateException("Access denied: you are not a member of this chat.");
+        }
+        List<MessageHistory> listfromrepo = historyrepo.findByChatId(chatId);
+        List<MessageHistory> res = new ArrayList<>();
+        for (MessageHistory item : listfromrepo) {
+            res.add(toDecryptedCopy(item));
+        }
+        return res;
     }
 
     // منطق مشترک ثبت یک نسخه جدید

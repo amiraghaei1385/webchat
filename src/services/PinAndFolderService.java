@@ -24,6 +24,12 @@ public class PinAndFolderService {
         chatrepo.update(chat);
     }
 
+    public void setMuted(String chatId, String requesterId, boolean muted) {
+        Chat chat = getOwnedChat(chatId, requesterId);
+        chat.setMuted(muted);
+        chatrepo.update(chat);
+    }
+
     // آرشیو کردن چت
     public void setArchived(String chatId, String requesterId, boolean archived) {
         Chat chat = getOwnedChat(chatId, requesterId);

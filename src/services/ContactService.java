@@ -60,6 +60,18 @@ public class ContactService {
         contactrepo.update(contact);
     }
 
+    // دریافت لیست کاربران بلاک شده
+    public List<Contact> getBlockedUsers(String ownerId) {
+        List<Contact> all = contactrepo.findByOwnerId(ownerId);
+        List<Contact> result = new ArrayList<>();
+        for (Contact c : all) {
+            if (c.isBlocked()) {
+                result.add(c);
+            }
+        }
+        return result;
+    }
+
     // دریافت لیست مخاطبین واقعی
     public List<Contact> getContacts(String ownerId) {
         List<Contact> all = contactrepo.findByOwnerId(ownerId);

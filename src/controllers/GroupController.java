@@ -47,6 +47,8 @@ public class GroupController implements HttpHandler {
                 doEditGroup(ctx, user);
             } else if (method.equals("POST") && path.matches("/api/groups/[^/]+/members")) {
                 doAddMember(ctx, user);
+            } else if (method.equals("POST") && path.matches("/api/groups/[^/]+/picture/upload")) {
+                doUploadGroupPicture(ctx, user);
             } else {
                 HttpApiServer.sendResponse(exchange, 404, "{\"error\":\"Not found.\"}");
             }
@@ -62,7 +64,11 @@ public class GroupController implements HttpHandler {
     // اینجا گروه ساخته میشه
     private void doCreateGroup(RequestContext ctx, User user) throws IOException {
         String name = getStr(ctx.getBody(), "name");
-        Group group = groupserv.createGroup(name, user.getId());
+        String idgroup = getStr(ctx.getBody(), "groupId");
+        if (idgroup.isEmpty()) {
+            idgroup = java.util.UUID.randomUUID().toString();
+        }
+        Group group = groupserv.createGroup(idgroup, name, user.getId());
         HttpApiServer.sendResponse(ctx.getExchange(), 201, groupToJson(group));
     }
 
@@ -73,6 +79,25 @@ public class GroupController implements HttpHandler {
         String idgroup = parts.length >= 4 ? parts[3] : "";
         groupserv.removeMember(idgroup, user.getId(), idtargetuser);
         HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"Member removed.\"}");
+    }
+
+    // اینجا عکس گروه آپلود میشه
+    private void doUploadGroupPicture(RequestContext ctx, User user) throws IOException {
+        String body = ctx.getBody();
+        String idgroup = getGroupId(ctx.getPath());
+        String filebase64 = getStr(body, "fileBase64");
+        String orgfilename = getStr(body, "originalFileName");
+        if (filebase64.isEmpty()) {
+            throw new IllegalArgumentException("File content (fileBase64) is required.");
+        }
+        byte[] filebytes;
+        try {
+            filebytes = Base64.getDecoder().decode(filebase64);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid base64 file content.");
+        }
+        Group group = groupserv.updateGroupPicture(idgroup, user.getId(), filebytes, orgfilename);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, groupToJson(group));
     }
 
     // اینجا اطلاعات گروه برگردونده میشه
@@ -122,6 +147,7 @@ public class GroupController implements HttpHandler {
                 + "\"chatId\":\"" + group.getChatId() + "\","
                 + "\"name\":\"" + escape(group.getName()) + "\","
                 + "\"description\":\"" + escape(group.getDescription()) + "\","
+                + "\"picturePath\":\"" + escape(group.getPicturePath()) + "\","
                 + "\"ownerId\":\"" + group.getOwnerId() + "\"}";
     }
 
@@ -139,6 +165,7 @@ public class GroupController implements HttpHandler {
                 + "\"chatId\":\"" + group.getChatId() + "\","
                 + "\"name\":\"" + escape(group.getName()) + "\","
                 + "\"description\":\"" + escape(group.getDescription()) + "\","
+                + "\"picturePath\":\"" + escape(group.getPicturePath()) + "\","
                 + "\"ownerId\":\"" + group.getOwnerId() + "\","
                 + "\"memberCount\":" + members.size() + ","
                 + "\"members\":" + membersjson + "}";

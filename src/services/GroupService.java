@@ -9,6 +9,7 @@ import repository.GroupRepository;
 import repository.UserRepository;
 import utils.IdGenerator;
 import java.util.*;
+import java.io.File;
 
 // مدیریت گروه‌ها و اعضای آن‌ها
 public class GroupService {
@@ -25,13 +26,46 @@ public class GroupService {
         this.userrepo = userRepository;
     }
 
+    // آپدیت عکس گروه هر عضوی میتونه این کارو بکنه نه فقط ادمین
+    public Group updateGroupPicture(String idgroup, String requesterId, byte[] filebytes, String orgfilename) {
+        Optional<GroupMember> optrequester = grouprepo.findMember(idgroup, requesterId);
+        if (optrequester.isEmpty()) {
+            throw new IllegalStateException("You are not a member of this group.");
+        }
+        Optional<Group> optgroup = grouprepo.findById(idgroup);
+        if (optgroup.isEmpty()) {
+            throw new IllegalArgumentException("Group not found.");
+        }
+        File dir = new File("storage/group-avatars");
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        String extension = utils.PathUtil.extractExtension(orgfilename);
+        if (extension.isEmpty()) {
+            extension = "jpg";
+        }
+        File file = new File(dir, idgroup + "." + extension);
+        utils.FileUtil.writeBytesAtomic(file, filebytes);
+        Group group = optgroup.get();
+        group.setPicturePath(file.getPath());
+        grouprepo.update(group);
+        return group;
+    }
+
     // گروه ایحاد میشه
-    public Group createGroup(String name, String ownerId) {
+    public Group createGroup(String idgroup, String name, String ownerId) {
+        if (idgroup == null || idgroup.isBlank()) {
+            throw new IllegalArgumentException("Group ID cannot be empty.");
+        }
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Group name cannot be empty.");
         }
+        boolean idalreadyused = grouprepo.findById(idgroup).isPresent();
+        if (idalreadyused) {
+            throw new IllegalArgumentException("Group ID already taken.");
+        }
         Chat chat = new Chat(IdGenerator.generate(), ChatType.GROUP);
-        Group group = new Group(IdGenerator.generate(), chat.getId(), name, ownerId);
+        Group group = new Group(idgroup, chat.getId(), name, ownerId);
         chat.addMember(ownerId);
         chatrepo.save(chat);
         grouprepo.save(group);

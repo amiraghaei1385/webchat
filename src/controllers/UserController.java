@@ -9,6 +9,7 @@ import server.SessionManager;
 import services.UserService;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Base64;
 
 // کنترلر پروفایل کاربران
 public class UserController implements HttpHandler {
@@ -40,6 +41,8 @@ public class UserController implements HttpHandler {
                 doUpdateUserId(ctx, requester);
             } else if (method.equals("DELETE") && path.equals("/api/users/me/email")) {
                 doRemoveEmail(ctx, requester);
+            } else if (method.equals("PUT") && path.equals("/api/users/me/bio")) {
+                doUpdateBio(ctx, requester);
             } else if (method.equals("PUT") && path.equals("/api/users/me/email")) {
                 doUpdateEmail(ctx, requester);
             } else if (method.equals("PUT") && path.equals("/api/users/me/birth-date")) {
@@ -52,6 +55,8 @@ public class UserController implements HttpHandler {
                 doUpdateProfilePicture(ctx, requester);
             } else if (method.equals("DELETE") && path.equals("/api/users/me/background-picture")) {
                 doRemoveBackgroundPicture(ctx, requester);
+            } else if (method.equals("POST") && path.equals("/api/users/me/profile-picture/upload")) {
+                doUploadProfilePicture(ctx, requester);
             } else if (method.equals("DELETE") && path.equals("/api/users/me/profile-picture")) {
                 doRemoveProfilePicture(ctx, requester);
             } else if (method.equals("DELETE") && path.equals("/api/users/me")) {
@@ -78,6 +83,23 @@ public class UserController implements HttpHandler {
     }
 
     // ویرایش پروفایل //
+    private void doUploadProfilePicture(RequestContext ctx, User requester) throws IOException {
+        String body = ctx.getBody();
+        String fileBase64 = getStr(body, "fileBase64");
+        String originalFileName = getStr(body, "originalFileName");
+        if (fileBase64.isEmpty()) {
+            throw new IllegalArgumentException("File content (fileBase64) is required.");
+        }
+        byte[] fileBytes;
+        try {
+            fileBytes = Base64.getDecoder().decode(fileBase64);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid base64 file content.");
+        }
+        User updated = userserv.saveProfilePictureFile(requester.getId(), fileBytes, originalFileName);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, userToJson(updated));
+    }
+
     // تغییر آیدی منحصربه‌فرد کاربر
     private void doUpdateUserId(RequestContext ctx, User requester) throws IOException {
         String newuserid = getStr(ctx.getBody(), "userId");
@@ -102,6 +124,13 @@ public class UserController implements HttpHandler {
     private void doUpdateEmail(RequestContext ctx, User requester) throws IOException {
         String newemail = getStr(ctx.getBody(), "email");
         User updated = userserv.updateEmail(requester.getId(), newemail);
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, userToJson(updated));
+    }
+
+    // بایو
+    private void doUpdateBio(RequestContext ctx, User requester) throws IOException {
+        String newbio = getStr(ctx.getBody(), "bio");
+        User updated = userserv.updateBio(requester.getId(), newbio);
         HttpApiServer.sendResponse(ctx.getExchange(), 200, userToJson(updated));
     }
 

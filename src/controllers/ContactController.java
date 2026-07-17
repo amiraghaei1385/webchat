@@ -24,6 +24,7 @@ public class ContactController implements HttpHandler {
     // ورودی اصلی درخواست‌ها
     public void handle(HttpExchange exchange) throws IOException {
         RequestContext ctx = new RequestContext(exchange);
+
         // چک احراز هویت واسه همه‌ی مسیرهای این کنترلر
         User user = sessionmanager.validate(ctx.getSessionToken()).orElse(null);
         if (user == null) {
@@ -37,14 +38,16 @@ public class ContactController implements HttpHandler {
                 doAddContact(ctx, user);
             } else if (method.equals("GET") && path.equals("/api/contacts")) {
                 doGetContacts(ctx, user);
+            } else if (method.equals("DELETE") && path.matches("/api/contacts/[^/]+")) {
+                doRemoveContact(ctx, user);
+            } else if (method.equals("GET") && path.equals("/api/contacts/blocked")) {
+                doGetBlockedUsers(ctx, user);
+            } else if (method.equals("GET") && path.matches("/api/contacts/[^/]+/blocked")) {
+                doCheckBlocked(ctx, user);
             } else if (method.equals("POST") && path.matches("/api/contacts/[^/]+/block")) {
                 doBlockUser(ctx, user);
             } else if (method.equals("DELETE") && path.matches("/api/contacts/[^/]+/block")) {
                 doUnblockUser(ctx, user);
-            } else if (method.equals("GET") && path.matches("/api/contacts/[^/]+/blocked")) {
-                doCheckBlocked(ctx, user);
-            } else if (method.equals("DELETE") && path.matches("/api/contacts/[^/]+")) {
-                doRemoveContact(ctx, user);
             } else {
                 HttpApiServer.sendResponse(exchange, 404, "{\"error\":\"Not found.\"}");
             }
@@ -84,12 +87,26 @@ public class ContactController implements HttpHandler {
         HttpApiServer.sendResponse(ctx.getExchange(), 200, sb.toString());
     }
 
-    // بلاک و آنبلاک //
+    // بلاک و آنبلاک 
     // بلاک کردن یه کاربر
     private void doBlockUser(RequestContext ctx, User user) throws IOException {
         String idtarget = getIdFromPath(ctx.getPath(), 3);
         contactserv.blockUser(user.getId(), idtarget);
         HttpApiServer.sendResponse(ctx.getExchange(), 200, "{\"message\":\"User blocked.\"}");
+    }
+
+    // اینجا لیست کاربران بلاک شده برگردونده میشه
+    private void doGetBlockedUsers(RequestContext ctx, User user) throws IOException {
+        List<Contact> listblocked = contactserv.getBlockedUsers(user.getId());
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < listblocked.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(contactToJson(listblocked.get(i)));
+        }
+        sb.append("]");
+        HttpApiServer.sendResponse(ctx.getExchange(), 200, sb.toString());
     }
 
     // چک بلاک بودن

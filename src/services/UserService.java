@@ -2,12 +2,15 @@ package services;
 
 import models.User;
 import repository.UserRepository;
+import utils.FileUtil;
+import utils.PathUtil;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.io.File;
 
 // مدیریت اطلاعات کاربران
 public class UserService {
@@ -103,6 +106,26 @@ public class UserService {
         return user;
     }
 
+    // آپلود و ذخیره‌ی عکس پروفایل
+    public User saveProfilePictureFile(String iduser, byte[] filebytes, String originalFileName) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        File dir = new File("storage/avatars");
+        if (!dir.exists())
+            dir.mkdirs();
+        String extension = PathUtil.extractExtension(originalFileName);
+        if (extension.isEmpty())
+            extension = "jpg";
+        File file = new File(dir, iduser + "." + extension);
+        FileUtil.writeBytesAtomic(file, filebytes);
+        User user = optuser.get();
+        user.setProfilePicPath(file.getPath());
+        userrepo.update(user);
+        return user;
+    }
+
     // تغییر عکس پس‌زمینه
     public User updateBackgroundPicture(String iduser, String picturepath) {
         Optional<User> optuser = userrepo.findById(iduser);
@@ -135,6 +158,21 @@ public class UserService {
     // حذف عکس پس‌زمینه
     public User removeBackgroundPicture(String iduser) {
         return updateBackgroundPicture(iduser, null);
+    }
+
+    // تغییر بیوگرافی
+    public User updateBio(String iduser, String newbio) {
+        Optional<User> optuser = userrepo.findById(iduser);
+        if (optuser.isEmpty()) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        User user = optuser.get();
+        if (newbio != null && newbio.length() > 200) {
+            throw new IllegalArgumentException("Bio too long (max 200 characters).");
+        }
+        user.setBio(newbio);
+        userrepo.update(user);
+        return user;
     }
 
     // تغییر ایمیل کاربر

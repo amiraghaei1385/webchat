@@ -8,7 +8,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FileHistoryRepository implements HistoryRepository {
-    // کلید: "{chatId}:{messageId}" -> لیست نسخه های تاریخچه
     private final Map<String, List<MessageHistory>> history = new ConcurrentHashMap<>();
     private final File fold = new File("storage/history");
 
@@ -169,6 +168,36 @@ public class FileHistoryRepository implements HistoryRepository {
                 file.delete();
             }
         }
+    }
+
+    @Override
+    public List<MessageHistory> findByChatId(String chatId) {
+        String prefix = chatId + ":";
+        List<MessageHistory> res = new ArrayList<>();
+        for (String key : history.keySet()) {
+            if (key.startsWith(prefix)) {
+                List<MessageHistory> list = history.get(key);
+                res.addAll(list);
+            }
+        }
+        Collections.sort(res, new Comparator<MessageHistory>() {
+            @Override
+            public int compare(MessageHistory h1, MessageHistory h2) {
+                LocalDateTime t1 = h1.getEditedAt();
+                LocalDateTime t2 = h2.getEditedAt();
+                if (t1 == null && t2 == null) {
+                    return 0;
+                }
+                if (t1 == null) {
+                    return -1;
+                }
+                if (t2 == null) {
+                    return 1;
+                }
+                return t1.compareTo(t2);
+            }
+        });
+        return res;
     }
 
     @Override

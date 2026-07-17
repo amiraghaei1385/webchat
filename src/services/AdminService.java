@@ -11,6 +11,7 @@ import security.PasswordHasher;
 import security.PasswordValidator;
 import java.util.*;
 import repository.ChatRepository;
+import utils.IdGenerator;
 
 // عملیات مدیریتی ادمین
 public class AdminService {
@@ -96,7 +97,8 @@ public class AdminService {
 
     // ساخت گروه توسط ادمین
     public Group createGroup(String name, String ownerId) {
-        return groupserv.createGroup(name, ownerId);
+        String idgroup = IdGenerator.generate();
+        return groupserv.createGroup(idgroup, name, ownerId);
     }
 
     // لیست اعضای گروه
