@@ -3,6 +3,7 @@ package controllers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import models.Chat;
+import models.Group;
 import models.Message;
 import models.MessageHistory;
 import models.User;
@@ -10,11 +11,14 @@ import server.HttpApiServer;
 import server.RequestContext;
 import server.SessionManager;
 import services.ChatService;
+import services.GroupService;
 import services.HistoryService;
 import services.MessageService;
 import services.PinAndFolderService;
+import services.UserService;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 // کنترلر چت‌ها و پیام‌ها
 public class ChatController implements HttpHandler {
@@ -24,15 +28,19 @@ public class ChatController implements HttpHandler {
     private final HistoryService historyserv;
     private final PinAndFolderService pinfolderserv;
     private final SessionManager sessionManager;
+    private final UserService userserv;
+    private final GroupService groupserv;
 
     public ChatController(ChatService chatService, MessageService messageService,
             HistoryService historyService, PinAndFolderService pinAndFolderService,
-            SessionManager sessionManager) {
+            SessionManager sessionManager, UserService userService, GroupService groupService) {
         this.chatserv = chatService;
         this.messageserv = messageService;
         this.historyserv = historyService;
         this.pinfolderserv = pinAndFolderService;
         this.sessionManager = sessionManager;
+        this.userserv = userService;
+        this.groupserv = groupService;
     }
 
     // ورودی اصلی درخواست‌ها
@@ -215,14 +223,64 @@ public class ChatController implements HttpHandler {
     // تبدیل به جیسون //
     private String chatToJson(Chat chat, User requester) {
         long unreadcount = messageserv.getUnreadCount(chat, requester.getId());
+        String extra;
+        if (chat.getType() == models.ChatType.GROUP) {
+            extra = "\"group\":" + groupToJsonOrNull(chat.getId()) + ",\"peer\":null";
+        } else if (chat.getType() == models.ChatType.PRIVATE) {
+            extra = "\"peer\":" + peerToJsonOrNull(chat, requester) + ",\"group\":null";
+        } else {
+            extra = "\"peer\":null,\"group\":null";
+        }
         return "{\"id\":\"" + chat.getId() + "\","
                 + "\"type\":\"" + chat.getType() + "\","
                 + "\"pinned\":" + chat.isPinned() + ","
                 + "\"archived\":" + chat.isArchived() + ","
                 + "\"muted\":" + chat.isMuted() + ","
                 + "\"unreadCount\":" + unreadcount + ","
+                + extra + ","
                 + "\"lastMessageAt\":\""
                 + (chat.getLastMessageAt() != null ? chat.getLastMessageAt() : "") + "\"}";
+    }
+
+    // اطلاعات کاربر مقابل رو برای چت خصوصی می‌سازه (نام، آنلاین بودن، عکس پروفایل)
+    private String peerToJsonOrNull(Chat chat, User requester) {
+        String idpeer = null;
+        for (String memberId : chat.getMemberIds()) {
+            if (!memberId.equals(requester.getId())) {
+                idpeer = memberId;
+                break;
+            }
+        }
+        if (idpeer == null) {
+            return "null";
+        }
+        Optional<User> found = userserv.findById(idpeer);
+        if (found.isEmpty()) {
+            return "null";
+        }
+        User peer = found.get();
+        return "{\"id\":\"" + peer.getId() + "\","
+                + "\"username\":\"" + escape(peer.getUsername()) + "\","
+                + "\"isOnline\":" + peer.isOnline() + ","
+                + "\"profilePicPath\":" + (peer.getProfilePicPath() != null
+                        ? "\"" + escape(peer.getProfilePicPath()) + "\""
+                        : "null")
+                + "}";
+    }
+
+    // اطلاعات گروه رو برای چت گروهی می‌سازه (نام، عکس گروه)
+    private String groupToJsonOrNull(String idchat) {
+        Optional<Group> found = groupserv.findByChatId(idchat);
+        if (found.isEmpty()) {
+            return "null";
+        }
+        Group group = found.get();
+        return "{\"id\":\"" + group.getId() + "\","
+                + "\"name\":\"" + escape(group.getName()) + "\","
+                + "\"picturePath\":" + (group.getPicturePath() != null
+                        ? "\"" + escape(group.getPicturePath()) + "\""
+                        : "null")
+                + "}";
     }
 
     private String messageToJson(Message msg) {

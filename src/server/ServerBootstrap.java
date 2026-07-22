@@ -38,7 +38,7 @@ public class ServerBootstrap {
         httpServer.register("POST", "/api/auth/reset-password", authController);
         // چت‌ها و پیام‌ها
         ChatController chatController = new ChatController(chatService, messageService,
-                historyService, pinAndFolderService, sessionManager);
+                historyService, pinAndFolderService, sessionManager, userService, groupService);
         httpServer.register("POST", "/api/chats", chatController);
         httpServer.register("GET", "/api/chats", chatController);
         httpServer.register("DELETE", "/api/chats", chatController);

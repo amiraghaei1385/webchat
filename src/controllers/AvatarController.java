@@ -34,14 +34,14 @@ public class AvatarController implements HttpHandler {
         }
         String[] parts = path.split("/");
         boolean isgrouppath = parts.length >= 5 && parts[3].equals("group");
-        if (parts.length >= 4) {
-            String iduser = parts[3];
-            handleUserAvatar(exchange, iduser);
-            return;
-        }
         if (isgrouppath) {
             String idgroup = parts[4];
             handleGroupAvatar(exchange, idgroup);
+            return;
+        }
+        if (parts.length >= 4) {
+            String iduser = parts[3];
+            handleUserAvatar(exchange, iduser);
             return;
         }
         HttpApiServer.sendResponse(exchange, 404, "{\"error\":\"Avatar not found.\"}");
