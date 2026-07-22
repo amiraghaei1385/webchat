@@ -1,0 +1,153 @@
+/* رنگ‌ها، فونت، فاصله - منبع اصلی تم اپلیکیشن */
+
+:root {
+  /* پالت اصلی: "Aurora" */
+  --aurora-teal:        #00e6d8;
+  --aurora-pink:        #ff4d8d;
+  --aurora-violet:      #6a5cff;
+  --aurora-deep:        #1a1440;
+  --aurora-deep-2:      #241a5e;
+
+  /* گرادینت امضادار برند */
+  --gradient-aurora: linear-gradient(120deg, var(--aurora-teal) 0%, var(--aurora-violet) 55%, var(--aurora-pink) 100%);
+  --gradient-aurora-soft: linear-gradient(120deg, rgba(0,230,216,0.25) 0%, rgba(106,92,255,0.25) 55%, rgba(255,77,141,0.25) 100%);
+
+  /* سطوح (Surfaces) */
+  --bg-app:            #0f0b2e;
+  --bg-app-2:          #150f3d;
+  --surface-glass:     rgba(255,255,255,0.08);
+  --surface-glass-hi:  rgba(255,255,255,0.14);
+  --surface-solid:     #1c1650;
+  --surface-border:    rgba(255,255,255,0.14);
+
+  /* متن */
+  --text-primary:      #ffffff;
+  --text-secondary:    rgba(255,255,255,0.72);
+  --text-muted:        rgba(255,255,255,0.5);
+  --text-on-light:     #1a1440;
+
+  /* وضعیت‌ها */
+  --state-success:     #00e6a8;
+  --state-error:       #ff5470;
+  --state-warning:     #ffb020;
+  --state-online:      #2be07c;
+
+  /* تایپوگرافی */
+  --font-display-en:   'Outfit', 'Segoe UI', sans-serif;
+  --font-body-en:      'Inter', 'Segoe UI', sans-serif;
+  --font-display-fa:   'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+  --font-body-fa:      'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+
+  /* اینها در base.css بسته به [lang] بازتعریف می‌شوند */
+  --font-display:      var(--font-display-en);
+  --font-body:         var(--font-body-en);
+
+  /* فاصله‌گذاری (Spacing scale) */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  40px;
+  --space-2xl: 64px;
+
+  /* شعاع گردی */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* سایه‌ها */
+  --shadow-soft: 0 8px 24px rgba(10, 6, 40, 0.35);
+  --shadow-lift: 0 16px 44px rgba(10, 6, 40, 0.45);
+  --shadow-glow-teal: 0 0 24px rgba(0,230,216,0.35);
+  --shadow-glow-pink: 0 0 24px rgba(255,77,141,0.35);
+
+  /* ترنزیشن */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --dur-fast: 0.15s;
+  --dur-normal: 0.3s;
+  --dur-slow: 0.6s;
+
+  /* اندازه‌های اختصاصی کامپوننت */
+  --chat-avatar-size: 58px;
+
+  /* z-index scale */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-overlay: 500;
+  --z-modal: 900;
+  --z-toast: 1000;
+}
+
+/* حالت روشن (اختیاری/امتیازی طبق سند) */
+[data-theme="light"] {
+  --bg-app:            #f4f2ff;
+  --bg-app-2:          #ece8ff;
+  --surface-glass:     rgba(26, 20, 64, 0.05);
+  --surface-glass-hi:  rgba(26, 20, 64, 0.09);
+  --surface-solid:     #ffffff;
+  --surface-border:    rgba(26, 20, 64, 0.12);
+  --text-primary:      #1a1440;
+  --text-secondary:    rgba(26,20,64,0.7);
+  --text-muted:        rgba(26,20,64,0.48);
+}
+
+/* پالت‌های رنگ پس‌زمینه‌ی صفحه‌ی چت (مستقل از رنگ برند دکمه‌ها) */
+:root {
+  --chat-bg-c1: var(--aurora-teal);
+  --chat-bg-c2: var(--aurora-violet);
+  --chat-bg-c3: var(--aurora-pink);
+}
+[data-bg-palette="ocean"] {
+  --chat-bg-c1: #00b4d8;
+  --chat-bg-c2: #0077b6;
+  --chat-bg-c3: #023e8a;
+}
+[data-bg-palette="sunset"] {
+  --chat-bg-c1: #ff9a56;
+  --chat-bg-c2: #ff6a88;
+  --chat-bg-c3: #ff4d8d;
+}
+[data-bg-palette="forest"] {
+  --chat-bg-c1: #38ef7d;
+  --chat-bg-c2: #11998e;
+  --chat-bg-c3: #0f766e;
+}
+[data-bg-palette="mono"] {
+  --chat-bg-c1: #9ca3af;
+  --chat-bg-c2: #4b5563;
+  --chat-bg-c3: #1f2937;
+}
+[data-bg-palette="candy"] {
+  --chat-bg-c1: #ff6ec7;
+  --chat-bg-c2: #c93bc0;
+  --chat-bg-c3: #a83279;
+}
+[data-bg-palette="lava"] {
+  --chat-bg-c1: #ff512f;
+  --chat-bg-c2: #eb2f5b;
+  --chat-bg-c3: #dd2476;
+}
+[data-bg-palette="mint"] {
+  --chat-bg-c1: #00f5a0;
+  --chat-bg-c2: #00c9dd;
+  --chat-bg-c3: #00d9f5;
+}
+[data-bg-palette="gold"] {
+  --chat-bg-c1: #f7971e;
+  --chat-bg-c2: #ffb347;
+  --chat-bg-c3: #ffd200;
+}
+[data-bg-palette="royal"] {
+  --chat-bg-c1: #7f00ff;
+  --chat-bg-c2: #b800e6;
+  --chat-bg-c3: #e100ff;
+}
+
+/* اندازه فونت پیام‌ها */
+[data-msg-font-size="xsmall"] .msg-bubble { font-size: 11.5px; }
+[data-msg-font-size="small"] .msg-bubble { font-size: 12.5px; }
+[data-msg-font-size="medium"] .msg-bubble { font-size: 14.5px; }
+[data-msg-font-size="large"] .msg-bubble { font-size: 17px; }
+[data-msg-font-size="xlarge"] .msg-bubble { font-size: 19.5px; }

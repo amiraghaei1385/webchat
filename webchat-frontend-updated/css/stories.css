@@ -1,0 +1,125 @@
+/* مودال ساخت استوری */
+
+.story-type-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.story-type-tab {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-glass-hi);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.story-type-tab.active {
+  background: var(--gradient-aurora, var(--accent));
+  color: #fff;
+}
+
+.story-media-drop {
+  border: 1.5px dashed var(--surface-border);
+  border-radius: var(--radius-md);
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.story-media-drop:hover { background: var(--surface-glass-hi); }
+
+/* نمایشگر استوری (تمام‌صفحه) */
+.story-viewer {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: var(--z-modal, 500);
+  display: flex;
+  flex-direction: column;
+}
+
+.story-viewer-progress {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+}
+.story-viewer-progress .story-viewer-progress-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.3);
+  overflow: hidden;
+}
+.story-viewer-progress .story-viewer-progress-seg .fill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+}
+.story-viewer-progress .story-viewer-progress-seg.done .fill { width: 100%; }
+
+.story-viewer-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px 14px;
+  color: #fff;
+}
+.story-viewer-name { font-weight: 700; font-size: 14px; }
+.story-viewer-time { font-size: 12px; opacity: 0.75; }
+.story-viewer-close, .story-viewer-delete {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+.story-viewer-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 12px;
+}
+.story-viewer-body img, .story-viewer-body video {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  object-fit: contain;
+}
+.story-viewer-text-slide {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  padding: 24px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.story-viewer-caption {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+
+.story-viewer-nav {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  top: 40px;
+}
+.story-viewer-nav-zone { flex: 1; cursor: pointer; }

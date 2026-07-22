@@ -1,0 +1,420 @@
+/* استایل صفحه اصلی */
+
+.home-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(0,230,216,0.14), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(255,77,141,0.14), transparent 45%),
+    var(--bg-app);
+  display: flex;
+  justify-content: center;
+  padding: var(--space-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.home-shell {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+  height: calc(100vh - 2 * var(--space-lg));
+}
+
+/* هدر بالای صفحه */
+.home-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 19px;
+}
+.home-brand-icon {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.home-header-actions {
+  margin-inline-start: auto;
+  display: flex;
+  gap: var(--space-sm);
+  position: relative;
+}
+/* منوی کشویی سه‌نقطه */
+/* دکمه منوی سه‌نقطه */
+#settingsBtn {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+/* نوار جستجو */
+.search-bar {
+  position: relative;
+  margin-bottom: 0;
+}
+.search-bar input {
+  width: 100%;
+  padding: 9px 16px;
+  padding-inline-start: 42px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-border);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: all var(--dur-normal) ease;
+}
+.search-bar input:focus {
+  background: var(--surface-glass-hi);
+  box-shadow: 0 0 0 3px rgba(0,230,216,0.15);
+}
+.search-bar input::placeholder { color: var(--text-muted); }
+.search-bar-icon {
+  position: absolute;
+  inset-inline-start: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* آرشیو پنهان، با pull آشکار می‌شود */
+.archive-reveal {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s var(--ease-standard), margin-bottom 0.35s var(--ease-standard);
+  margin-bottom: 0;
+}
+.archive-reveal.revealed {
+  max-height: 90px;
+  margin-bottom: var(--space-sm);
+}
+
+.archive-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-border);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease;
+  animation: slideInDown var(--dur-normal) ease;
+}
+.archive-row:hover { background: var(--surface-glass-hi); }
+.archive-row-icon {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--surface-glass-hi);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* راهنمای کشیدن */
+.pull-hint {
+  display: flex;
+  justify-content: center;
+  height: 8px;
+  margin-bottom: 0;
+  opacity: 0.35;
+  transition: opacity var(--dur-fast) ease;
+}
+.pull-hint-arrow {
+  animation: floatY 1.6s ease-in-out infinite;
+  font-size: 14px;
+}
+.archive-reveal.revealed + .pull-hint {
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* لیست اسکرول‌شونده‌ی چت‌ها */
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0; /* بدون فاصله تا خط زیر هر ردیف با ردیف بعدی مشترک شود */
+  padding-inline-end: 2px;
+  border-inline-end: 1px solid var(--surface-border);
+}
+
+.chat-list-section-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-sm) var(--space-sm) 4px;
+}
+
+.chat-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: var(--chat-avatar-size);
+  padding: 6px var(--space-sm);
+  cursor: pointer;
+  position: relative;
+  transition: background var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  animation: slideInUp 0.35s ease both;
+  border-bottom: 1px solid var(--surface-border);
+}
+.chat-row:last-child { border-bottom: none; }
+.chat-row:hover { background: var(--surface-glass); }
+.chat-row:active { background: var(--surface-glass-hi); }
+
+.chat-row-avatar {
+  width: var(--chat-avatar-size);
+  height: var(--chat-avatar-size);
+  font-size: 22px;
+}
+
+/* نشانگر آنلاین در صفحه‌ی اصلی: رینگ دور آواتار به‌جای نقطه‌ی کوچک گوشه.
+   از outline با offset منفی استفاده شده تا داخل مرز آواتار بماند و
+   توسط overflow:hidden ردیف چت بریده نشود. */
+.chat-row-avatar.is-online {
+  outline: 3px solid var(--state-online);
+  outline-offset: -3px;
+}
+.chat-row-avatar.is-online::after {
+  content: none;
+}
+
+.chat-row-body {
+  flex: 1;
+  min-width: 0;
+}
+.chat-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+.chat-row-name {
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chat-row-pin-icon {
+  font-size: 12px;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+.chat-row-time {
+  margin-inline-start: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.chat-row-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.chat-row-preview span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-row-menu-wrap { position: relative; }
+.chat-row-menu-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease, background var(--dur-fast) ease;
+}
+.chat-row-menu-btn svg { width: 15px; height: 15px; }
+.chat-row:hover .chat-row-menu-btn,
+.chat-row-menu-btn.open { opacity: 1; }
+.chat-row-menu-btn:hover,
+.chat-row-menu-btn.open { background: var(--surface-glass-hi); }
+
+.chat-row-menu {
+  position: fixed;
+  min-width: 180px;
+  background: var(--surface-solid);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lift);
+  padding: 6px;
+  z-index: var(--z-modal);
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+  transition: opacity var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+.chat-row-menu.open { opacity: 1; transform: scale(1); pointer-events: auto; }
+.chat-row-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  border-radius: var(--radius-sm);
+  text-align: start;
+  transition: background var(--dur-fast) ease;
+}
+.chat-row-menu-item:hover { background: var(--surface-glass-hi); }
+.chat-row-menu-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.chat-row-menu-item.danger { color: var(--state-error); }
+
+/* در موبایل (بدون هاور)، دکمه همیشه دیده می‌شود */
+@media (hover: none) {
+  .chat-row-menu-btn { opacity: 1; }
+}
+
+/* کارت خالی (وقتی هیچ چتی نیست) */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--text-muted);
+  gap: var(--space-md);
+}
+.empty-state-icon { font-size: 48px; opacity: 0.5; }
+
+/* دکمه شناور ایجاد گفتگوی جدید */
+.fab-new-chat {
+  position: fixed;
+  bottom: var(--space-xl);
+  inset-inline-end: calc(50% - 240px + var(--space-lg));
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gradient-aurora);
+  color: white;
+  font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-lift), var(--shadow-glow-teal);
+  cursor: pointer;
+  transition: transform var(--dur-normal) var(--ease-bounce);
+  z-index: var(--z-dropdown);
+}
+.fab-new-chat:hover { transform: scale(1.08) rotate(90deg); }
+
+@media (max-width: 560px) {
+  .fab-new-chat { inset-inline-end: var(--space-lg); }
+}
+
+/* ردیف استوری‌ها (الگوی تلگرام) */
+.stories-row {
+  display: flex;
+  gap: var(--space-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 4px;
+  margin-bottom: 0;
+  scrollbar-width: none;
+}
+.stories-row::-webkit-scrollbar { display: none; }
+
+.story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  width: 64px;
+  cursor: pointer;
+}
+
+.story-avatar-ring {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  padding: 2.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-glass-hi);
+  transition: transform var(--dur-fast) ease;
+}
+.story-item:hover .story-avatar-ring { transform: scale(1.05); }
+
+/* رینگ گرادیانتی: استوری جدید/خوانده‌نشده */
+.story-avatar-ring.has-unseen {
+  background: var(--gradient-aurora);
+}
+/* رینگ خاکستری کم‌رنگ: استوری‌ها قبلاً دیده شده */
+.story-avatar-ring.all-seen {
+  background: var(--surface-border);
+}
+
+.story-avatar-ring .avatar {
+  width: 100%; height: 100%;
+  border: 2.5px solid var(--bg-app);
+  font-size: 18px;
+}
+
+.story-item-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  max-width: 64px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* آیتم «استوری من»: دکمه‌ی افزودن با نشان + */
+.story-add-badge {
+  position: absolute;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--gradient-aurora);
+  border: 2.5px solid var(--bg-app);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.story-avatar-ring-wrap { position: relative; }
+
+/* پارتیکل کم‌رنگ‌تر از auth */
+.home-page .ui-particle {
+  opacity: 0.12 !important;
+  animation-duration: 18s !important;
+}
